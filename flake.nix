@@ -5,7 +5,6 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
     home-manager.url = "github:nix-community/home-manager/release-25.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
-    nixos-conf-editor.url = "github:snowfallorg/nixos-conf-editor/0.1.2";
   };
 
   outputs = { self, nixpkgs, home-manager, ... }: {

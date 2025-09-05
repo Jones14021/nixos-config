@@ -10,7 +10,7 @@
   ];
 
   imports = [
-    ../modules/onedrive.nix
+    #../modules/onedrive.nix
     # Import other personal Home Manager modules here if needed
   ];
 }

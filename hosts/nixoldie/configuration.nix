@@ -70,8 +70,6 @@
 
     # ease of life with nix os
     nix-software-center
-    inputs.nixos-conf-editor.packages.${system}.nixos-conf-editor
-
     # KDE stuff
     kdePackages.ksshaskpass
   ];
