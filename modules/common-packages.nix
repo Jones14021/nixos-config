@@ -27,6 +27,7 @@
     trayscale
     unstablePkgs.mission-center
     usbview
+    iperf
 
     # ease of life with nix os
     nix-software-center
