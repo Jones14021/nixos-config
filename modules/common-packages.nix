@@ -3,6 +3,7 @@
   imports = [
     ./nix-software-center.nix
     ./kde-plasma-6.nix
+    ./tailscale.nix
   ];
 
   environment.systemPackages = with pkgs; [
@@ -37,8 +38,7 @@
     # If needed: (imported flake input/flaked package here, see below)
   ];
 
-  # enable installed services and programs
-  services.tailscale.enable = true;
+  # enable installed services and programs  
   services.printing.enable = true;
   networking.networkmanager.enable = true;
 
