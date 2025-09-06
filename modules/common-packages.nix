@@ -34,6 +34,7 @@
 
     # KDE stuff
     kdePackages.ksshaskpass
+    kdePackages.kconfig # for kwriteconfig6
 
     # If needed: (imported flake input/flaked package here, see below)
   ];
