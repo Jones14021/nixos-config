@@ -25,13 +25,19 @@
       #   nix run github:nix-community/plasma-manager -- rc2nix ~/.config/kglobalshortcutsrc > shortcuts-generated.nix
 
       # open Konsole with Meta+T
-      konsole = {
-        command = "konsole";
-        shortcut = "Meta+T";
+      "services/org.kde.konsole.desktop" = {
+        _launch = "Meta+T";
       };
 
       # open KDE System Settings with Meta+I
-      "services/systemsettings.desktop"."_launch" = ["Tools" "Meta+I"];
+      "services/systemsettings.desktop" = {
+        _launch = "Meta+I";
+      };
+
+      # open Dolphin with Meta+E
+      "services/org.kde.dolphin.desktop" = {
+        _launch = "Meta+E";
+      };
     };
   };
 }
