@@ -3,15 +3,12 @@
 {
   imports = [
     ../../modules/common-packages.nix
-    # host/role specific modules here
-
-    # Host-specific packages: Add or override systemPackages inside the host config
-    # as needed. Nix modules will merge (but not de-duplicate!) all package lists.
+    ../../modules/linux-kernel.nix
+    # host/role specific modules here    
   ];
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   networking.hostName = "nixoldie";
   networking.networkmanager.enable = true;
@@ -58,6 +55,9 @@
 
   environment.systemPackages = with pkgs; [
     # host specific packages here
+
+    # Host-specific packages: Add or override systemPackages inside the host config
+    # as needed. Nix modules will merge (but not de-duplicate!) all package lists.
   ];
 
   nix.settings.experimental-features = [ "flakes" "nix-command" ];
