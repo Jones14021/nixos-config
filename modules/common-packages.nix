@@ -1,4 +1,4 @@
-{ pkgs, nixosConfEditor, ... }:
+{ pkgs, unstablePkgs, nixosConfEditor, ... }:
 {
   imports = [
     ./nix-software-center.nix
@@ -21,7 +21,7 @@
     vscode
     tailscale
     trayscale
-    mission-center
+    unstablePkgs.mission-center
 
     # ease of life with nix os
     nix-software-center

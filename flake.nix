@@ -12,12 +12,13 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     home-manager.url = "github:nix-community/home-manager/release-25.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     nixosConfEditor.url = "github:snowfallorg/nixos-conf-editor";
   };
 
-  outputs = { self, nixpkgs, home-manager, nixosConfEditor, ... }: let
+  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, nixosConfEditor, ... }: let
 
     allHosts = [
       {
@@ -50,6 +51,13 @@
           # Pass all flake package inputs as specialArgs
           specialArgs = {
             nixosConfEditor = nixosConfEditor;
+            # ----- Why use legacyPackages? -----
+            # * Most existing NixOS and Home Manager configurations expect pkgs to be a set of packages
+            #   indexed by their names (pkgs.vim, pkgs.firefox, etc.).
+            # * legacyPackages exposes this compatible package set from newer nixpkgs sources (like unstable or overlays).
+            # * Without explicitly using legacyPackages, you might work with the newer packageOverrides
+            #   or other evolving interfaces that can break backwards compatibility.
+            unstablePkgs = nixpkgs-unstable.legacyPackages.x86_64-linux;
             # add more flake packages here if needed
           };
         };
