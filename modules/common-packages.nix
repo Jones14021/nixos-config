@@ -14,6 +14,8 @@
     rclone
     fuse
     wget
+    gparted
+    usbutils
     
     # 3rd party
     google-chrome
@@ -23,6 +25,7 @@
     tailscale
     trayscale
     unstablePkgs.mission-center
+    usbview
 
     # ease of life with nix os
     nix-software-center
