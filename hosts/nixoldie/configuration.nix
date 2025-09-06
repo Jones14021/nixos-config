@@ -2,7 +2,11 @@
 
 {
   imports = [
-    ../../modules/nix-software-center.nix
+    ../../modules/common-packages.nix
+    # host/role specific modules here
+
+    # Host-specific packages: Add or override systemPackages inside the host config
+    # as needed. Nix modules will merge (but not de-duplicate!) all package lists.
   ];
 
   boot.loader.systemd-boot.enable = true;
@@ -53,36 +57,10 @@
   programs.firefox.enable = true;
 
   environment.systemPackages = with pkgs; [
-    # essentials
-    vim
-    nano
-    git
-    python314
-    rclone
-    fuse
-    wget
-    
-    # 3rd party
-    google-chrome
-    snapmaker-luban
-    cura-appimage
-    vscode
-
-    # ease of life with nix os
-    nix-software-center
-    # KDE stuff
-    kdePackages.ksshaskpass
+    # host specific packages here
   ];
 
   nix.settings.experimental-features = [ "flakes" "nix-command" ];
-  nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.permittedInsecurePackages = [
-    "snapmaker-luban-4.15.0"
-  ];
-
-  environment.variables = {
-    SUDO_ASKPASS = "${pkgs.kdePackages.ksshaskpass}/bin/ksshaskpass";
-  };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
