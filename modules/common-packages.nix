@@ -21,6 +21,7 @@
     vscode
     tailscale
     trayscale
+    mission-center
 
     # ease of life with nix os
     nix-software-center
