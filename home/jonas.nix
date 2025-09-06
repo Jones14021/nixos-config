@@ -38,6 +38,11 @@
       "services/org.kde.dolphin.desktop" = {
         _launch = "Meta+E";
       };
+
+      # open "Task Manager" :)
+      "services/io.missioncenter.MissionCenter.desktop" = {
+        _launch="Ctrl+Shift+Esc";
+      };
     };
   };
 }
