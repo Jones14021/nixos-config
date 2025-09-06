@@ -10,7 +10,7 @@
 
   imports = [
     # Import other personal Home Manager modules here if needed
-    #../modules/onedrive.nix    
+    ../modules/onedrive.nix    
   ];
 
   # plasma-manager exposes its Home Manager integration as a NixOS/Home Manager module.
