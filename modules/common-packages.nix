@@ -19,6 +19,8 @@
     snapmaker-luban
     cura-appimage
     vscode
+    tailscale
+    trayscale
 
     # ease of life with nix os
     nix-software-center
@@ -31,7 +33,7 @@
   ];
 
   nixpkgs.config.allowUnfree = true;
-  
+
   nixpkgs.config.permittedInsecurePackages = [
     "snapmaker-luban-4.15.0"
   ];
