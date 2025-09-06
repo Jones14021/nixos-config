@@ -2,6 +2,7 @@
 {
   imports = [
     ./nix-software-center.nix
+    ./kde-plasma-6.nix
   ];
 
   environment.systemPackages = with pkgs; [
