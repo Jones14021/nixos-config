@@ -29,7 +29,7 @@
   users.users.jonas = {
     isNormalUser = true;
     description = "Jonas Hoermann";
-    extraGroups = [ "networkmanager" "wheel" "fuse" ];
+    extraGroups = [ "networkmanager" "wheel" "fuse" "dialout"];
   };
 
   environment.systemPackages = with pkgs; [
