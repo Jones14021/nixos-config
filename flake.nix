@@ -26,9 +26,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
+
+    erosanix = {
+      url = "github:emmanuelrosa/erosanix";
+    };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, plasma-manager, nixosConfEditor, ... }: let
+  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, plasma-manager, nixosConfEditor, erosanix, ... }: let
 
     allHosts = [
       {
@@ -41,7 +45,15 @@
       # , { name = "otherhost"; ... }
     ];
 
+    # get the function to get the per-system attrset for the contained packages
+    mkPackages = import ./flake-packages.nix { inherit nixpkgs erosanix; };
+
   in {
+
+    # add the packages returned by mkPackages to self.packages for different systems
+    packages.x86_64-linux = mkPackages "x86_64-linux";
+    # could for example do that for other systems/architectures here as well
+
     # Dynamically define all hosts using list above
     nixosConfigurations = builtins.listToAttrs (
       map (host: {
@@ -61,6 +73,7 @@
           ];
           # Pass all flake package inputs as specialArgs
           specialArgs = {
+            inherit self;
             nixosConfEditor = nixosConfEditor;
             # ----- Why use legacyPackages? -----
             # * Most existing NixOS and Home Manager configurations expect pkgs to be a set of packages

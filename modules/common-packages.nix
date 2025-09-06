@@ -1,4 +1,4 @@
-{ pkgs, unstablePkgs, nixosConfEditor, ... }:
+{ pkgs, unstablePkgs, nixosConfEditor, self, ... }:
 {
   imports = [
     ./nix-software-center.nix
@@ -28,6 +28,9 @@
     unstablePkgs.mission-center
     usbview
     iperf
+
+    # Windows apps
+    self.packages.${pkgs.system}.fusion360
 
     # ease of life with nix os
     nix-software-center
