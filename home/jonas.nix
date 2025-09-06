@@ -5,21 +5,33 @@
   # same considerations as for system.stateVersion
   home.stateVersion = "25.05";
   home.packages = with pkgs; [
-    # Add any personal packages or scripts you want just for jonas here
+    # Add any personal packages or scripts you want just for the user here
   ];
 
   imports = [
-    #../modules/onedrive.nix
     # Import other personal Home Manager modules here if needed
+    #../modules/onedrive.nix    
   ];
 
-  # activation scripts
-  home.activation.setKdeShortcuts = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    # Set shortcut for opening Konsole with Meta+T
-    kwriteconfig6 --file 'kglobalshortcutsrc' --group 'org.kde.konsole.desktop' --key '_launch' 'Meta+T'
+  # plasma-manager exposes its Home Manager integration as a NixOS/Home Manager module.
+  # This module registers options under programs.plasma.*
+  #
+  # find examples here: https://github.com/nix-community/plasma-manager/blob/trunk/examples/home.nix
+  programs.plasma = {
+    enable = true; # activates and enables the plasma-manager integration in Home Manager user environment
 
-    # Set shortcut for launching System Settings Info page with Meta+I
-    kwriteconfig6 --file 'kglobalshortcutsrc' --group 'org.kde.kdecontroller.desktop' --key '_launch' 'Meta+I'
-  '';
+    shortcuts = {
+      # helper: Run rc2nix to generate Nix expressions off of current config:
+      #   nix run github:nix-community/plasma-manager -- rc2nix ~/.config/kglobalshortcutsrc > shortcuts-generated.nix
 
+      # open Konsole with Meta+T
+      konsole = {
+        command = "konsole";
+        shortcut = "Meta+T";
+      };
+
+      # open KDE System Settings with Meta+I
+      "services/systemsettings.desktop"."_launch" = ["Tools" "Meta+I"];
+    };
+  };
 }
