@@ -11,7 +11,6 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking.hostName = "nixoldie";
-  networking.networkmanager.enable = true;
   time.timeZone = "Europe/Berlin";
 
   i18n.defaultLocale = "en_US.UTF-8";
@@ -27,25 +26,11 @@
     LC_TIME = "de_DE.UTF-8";
   };
 
-  services.printing.enable = true;
-
-  # Audio & multimedia
-  services.pulseaudio.enable = false;
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-  };
-
   users.users.jonas = {
     isNormalUser = true;
     description = "Jonas Hoermann";
     extraGroups = [ "networkmanager" "wheel" "fuse" ];
   };
-
-  programs.firefox.enable = true;
 
   environment.systemPackages = with pkgs; [
     # host specific packages here

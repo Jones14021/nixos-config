@@ -34,6 +34,24 @@
     # If needed: (imported flake input/flaked package here, see below)
   ];
 
+  # enable installed services and programs
+  services.tailscale.enable = true;
+  services.printing.enable = true;
+  networking.networkmanager.enable = true;
+
+  programs.firefox.enable = true;
+
+  # Audio & multimedia
+  services.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+  };
+
+
   nixpkgs.config.allowUnfree = true;
 
   nixpkgs.config.permittedInsecurePackages = [
