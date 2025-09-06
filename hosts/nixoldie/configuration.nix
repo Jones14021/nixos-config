@@ -4,6 +4,7 @@
   imports = [
     ../../modules/common-packages.nix
     ../../modules/linux-kernel.nix
+    ../../modules/printing.nix
     # host/role specific modules here    
   ];
 

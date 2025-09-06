@@ -39,9 +39,7 @@
   ];
 
   # enable installed services and programs  
-  services.printing.enable = true;
   networking.networkmanager.enable = true;
-
   programs.firefox.enable = true;
 
   # Audio & multimedia
@@ -53,7 +51,6 @@
     alsa.support32Bit = true;
     pulse.enable = true;
   };
-
 
   nixpkgs.config.allowUnfree = true;
 
