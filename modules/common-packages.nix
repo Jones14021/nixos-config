@@ -33,6 +33,7 @@
     unstablePkgs.mission-center
     usbview
     iperf
+    onlyoffice-desktopeditors
 
     # Windows apps
     self.packages.${pkgs.system}.fusion360
