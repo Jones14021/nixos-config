@@ -51,9 +51,6 @@
   networking.networkmanager.enable = true;
   programs.firefox.enable = true;
 
-  # Enable Flatpak service on NixOS
-  services.flatpak.enable = true;
-
   # Audio & multimedia
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;

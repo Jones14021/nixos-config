@@ -5,6 +5,8 @@ let
   downloadPath = "${downloadDir}/mobilesheets-companion.flatpak";
 in
 {
+  services.flatpak.enable = true;
+
   # preInit runs before managing remotes/apps; fetch the out-of-tree flatpakref
   services.flatpak.preInstallCommand = ''
     set -eu
