@@ -33,6 +33,9 @@
     # Windows apps
     self.packages.${pkgs.system}.fusion360
 
+    # flatpak related stuff
+    warehouse
+
     # ease of life with nix os
     nix-software-center
     nixosConfEditor.packages.${pkgs.system}.nixos-conf-editor
