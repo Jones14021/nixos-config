@@ -14,6 +14,8 @@
     nano
     git
     python314
+    python312
+    unstablePkgs.uv
     rclone
     fuse
     wget
