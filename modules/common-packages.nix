@@ -4,7 +4,7 @@
     ./nix-software-center.nix
     ./kde-plasma-6.nix
     ./tailscale.nix
-    ./mobilesheets-companion.nix
+    ./mobilesheets-companion.nix    ./fusion360.nix
   ];
 
   environment.systemPackages = with pkgs; [
@@ -30,8 +30,7 @@
     usbview
     iperf
 
-    # Windows apps
-    self.packages.${pkgs.system}.fusion360
+    # Windows apps    #self.packages.${pkgs.system}.appname (see pkgs/<name>/default.nix)
 
     # flatpak related stuff
     warehouse
@@ -50,6 +49,7 @@
   # enable installed services and programs  
   networking.networkmanager.enable = true;
   programs.firefox.enable = true;
+  services.fusion360-bottles.enable = true;
 
   # Audio & multimedia
   services.pulseaudio.enable = false;

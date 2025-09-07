@@ -9,10 +9,6 @@ let
 in
 with (pkgs // erosanix.packages.${system} // erosanix.lib.${system});
 {
-  fusion360 = pkgs.callPackage ./pkgs/fusion360 {
-    inherit mkWindowsApp makeDesktopIcon copyDesktopIcons;
-    wine = wineWowPackages.base;
-  };
   # other packages here e.g.
     #package_name = pkgs.callPackage ./pkgs/someflake {
     #  inherit (anotherneededflake.packages.${system}) mkWindowsApp;
