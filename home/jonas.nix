@@ -4,13 +4,14 @@
   # match system.stateVersion, but keep and upgrade independently
   # same considerations as for system.stateVersion
   home.stateVersion = "25.05";
-  home.packages = with pkgs; [
-    # Add any personal packages or scripts you want just for the user here
-  ];
 
   imports = [
-    # Import other personal Home Manager modules here if needed
-    ../modules/onedrive.nix    
+    # Import other personal Home Manager/personal modules here if needed
+    ../modules/onedrive.nix
+  ];
+
+  home.packages = with pkgs; [
+    # Add any personal packages or scripts you want just for the user here
   ];
 
   # plasma-manager exposes its Home Manager integration as a NixOS/Home Manager module.
@@ -44,5 +45,24 @@
         _launch="Ctrl+Shift+Esc";
       };
     };
+  };
+
+  # fix bug where luban config dir is not writeable
+  systemd.user.services.seed-luban-config = {
+      Unit.Description = "Seed writable Snapmaker Luban config";
+      Service = {
+          Type = "oneshot";
+          ExecStart = ''
+          ${pkgs.bash}/bin/bash -c '\
+          cfg=\"$HOME/.config/snapmaker-luban/Config\"; \
+          recovercfg=\"$HOME/.config/snapmaker-luban/snapmaker-recover\"; \
+          find \"$cfg\" -type d -exec chmod u+rwx {} +; \
+          find \"$cfg\" -type f -exec chmod u+rw {} +; \
+          find \"$recovercfg\" -type d -exec chmod u+rwx {} +; \
+          find \"$recovercfg\" -type f -exec chmod u+rw {} +; \
+          '
+          '';
+      };
+      Install.WantedBy = [ "default.target" ];
   };
 }

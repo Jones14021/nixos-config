@@ -5,6 +5,7 @@
     ./kde-plasma-6.nix
     ./tailscale.nix
     ./mobilesheets-companion.nix
+    ./snapmaker-luban.nix
   ];
 
   environment.systemPackages = with pkgs; [
@@ -18,6 +19,7 @@
     wget
     gparted
     usbutils
+    bash
     
     # 3rd party
     google-chrome
@@ -62,10 +64,6 @@
   };
 
   nixpkgs.config.allowUnfree = true;
-
-  nixpkgs.config.permittedInsecurePackages = [
-    "snapmaker-luban-4.15.0"
-  ];
 
   environment.variables = {
     SUDO_ASKPASS = "${pkgs.kdePackages.ksshaskpass}/bin/ksshaskpass";
