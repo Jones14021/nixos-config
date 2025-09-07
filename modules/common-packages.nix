@@ -4,6 +4,7 @@
     ./nix-software-center.nix
     ./kde-plasma-6.nix
     ./tailscale.nix
+    ./mobilesheets-companion.nix
   ];
 
   environment.systemPackages = with pkgs; [
@@ -46,6 +47,9 @@
   # enable installed services and programs  
   networking.networkmanager.enable = true;
   programs.firefox.enable = true;
+
+  # Enable Flatpak service on NixOS
+  services.flatpak.enable = true;
 
   # Audio & multimedia
   services.pulseaudio.enable = false;

@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "declarative-flatpak": {
+      "locked": {
+        "lastModified": 1754772718,
+        "narHash": "sha256-AlYxWTqGiYlyMbMkh7Zt+2wekPxd3d1x6INbr2nQtTI=",
+        "owner": "in-a-dil-emma",
+        "repo": "declarative-flatpak",
+        "rev": "8ca8ff9fffb6c94561b74f79569a0ac0e43464c2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "in-a-dil-emma",
+        "ref": "stable-v3",
+        "repo": "declarative-flatpak",
+        "type": "github"
+      }
+    },
     "erosanix": {
       "inputs": {
         "flake-compat": "flake-compat",
@@ -231,6 +247,7 @@
     },
     "root": {
       "inputs": {
+        "declarative-flatpak": "declarative-flatpak",
         "erosanix": "erosanix",
         "home-manager": "home-manager",
         "nixosConfEditor": "nixosConfEditor",
