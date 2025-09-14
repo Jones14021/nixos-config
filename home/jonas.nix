@@ -8,6 +8,7 @@
   imports = [
     # Import other personal Home Manager/personal modules here if needed
     ../modules/home-manager/onedrive.nix
+    ../modules/home-manager/git.nix
   ];
 
   home.packages = with pkgs; [
