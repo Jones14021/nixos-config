@@ -22,6 +22,7 @@
     gparted
     usbutils
     bash
+    android-tools
     
     # 3rd party
     google-chrome
