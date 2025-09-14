@@ -26,20 +26,10 @@ let
       "${kindleApk}"
     )
 
-    # Start session if not running
+    # Start session in a new process if not running
     if ! systemctl --user is-active --quiet waydroid-session; then
-      waydroid session start || true
+      waydroid session start &
     fi
-
-    # Wait up to 30 minutes for Android user 0 to be ready
-    end=$(( $(date +%s) + 1800 ))
-    until waydroid status 2>/dev/null | grep -q "Android with user 0 is ready"; do
-      if [ $(date +%s) -ge $end ]; then
-        echo "Timed out waiting for Waydroid session (30 minutes)."
-        exit 0
-      fi
-      sleep 3
-    done
 
     install_apk() {
       local apk="$1"
@@ -51,58 +41,23 @@ let
     done
   '';
 
-  waydroidInitScript = pkgs.writeShellScriptBin "waydroid-once-init-gapps" ''
-    set -euo pipefail
-
-    # Detect initialization: presence of data directory is a practical indicator on most setups
-    if waydroid status 2>/dev/null | grep -q "Session: RUNNING"; then
-      # Running session implies already initialized
-      exit 0
-    fi
-
-    # Try a more direct check using the global instance props
-    if waydroid status 2>/dev/null | grep -q "Android with user 0"; then
-      exit 0
-    fi
-
-    # If not initialized, run GAPPS image init once
-    # Note: requires network and may take a while
-    waydroid init -s GAPPS
-  '';
-
   waydroidSettingsScript = pkgs.writeShellScriptBin "waydroid-persist-settings" ''
     set -euo pipefail
 
     # Stop session if running
-    if systemctl --user is-active --quiet waydroid-session; then
-      waydroid session stop
-    fi
+    waydroid session stop || true
 
     # waydroid by default always runs in fullscreen.
     # Enable Window integration with Desktop Window Manager
     waydroid prop set persist.waydroid.multi_windows true
+    waydroid prop set persist.waydroid.suspend true
 
-    waydroid session start
+    waydroid session start &
   '';
 in
 {
   # 1) One-shot initializer: runs only if not initialized
-  systemd.user.services."waydroid-init-once" = {
-    Unit = {
-      Description = "One-shot Waydroid initialization with GAPPS if not yet initialized";
-      After = [ "network-online.target" ];
-      Wants = [ "network-online.target" ];
-    };
-    Service = {
-      Type = "oneshot";
-      ExecStart = "${waydroidInitScript}/bin/waydroid-once-init-gapps";
-      # Avoid repeated runs; harmless if re-run but keep it tidy
-      RemainAfterExit = true;
-    };
-    Install = {
-      WantedBy = [ "default.target" ];
-    };
-  };
+  # done in system service
 
   # 2) App installer: waits for waydroid session, installs a known set of apps, times out after 30 min
   systemd.user.services."waydroid-install-apps" = {
@@ -114,7 +69,6 @@ in
     Service = {
       Type = "oneshot";
       ExecStart = "${appInstallerScript}/bin/waydroid-app-installer";
-      TimeoutSec = 1900; # a bit over 30 minutes to account for script plus exit
     };
     Install = {
       WantedBy = [ "default.target" ];

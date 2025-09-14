@@ -7,6 +7,7 @@
     ./mobilesheets-companion.nix
     ./snapmaker-luban.nix
     ./calibre-overlay.nix
+    ./waydroid.nix
   ];
 
   environment.systemPackages = with pkgs; [
@@ -71,7 +72,6 @@
   programs.wireshark.enable = true;
   programs.wireshark.usbmon.enable = true;
   programs.wireshark.dumpcap.enable = true;
-  virtualisation.waydroid.enable = true;
 
   # Audio & multimedia
   services.pulseaudio.enable = false;
