@@ -6,6 +6,7 @@
     ./tailscale.nix
     ./mobilesheets-companion.nix
     ./snapmaker-luban.nix
+    ./nethogs-rootless.nix
   ];
 
   environment.systemPackages = with pkgs; [
@@ -26,6 +27,7 @@
     git-lfs
     wireshark
     scrcpy
+    nethogs
     
     # 3rd party
     google-chrome
