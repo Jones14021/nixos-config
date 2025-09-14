@@ -5,6 +5,14 @@
 #
 # * After the ZIP is present, Calibre still needs an initial, manual “Load plugin from file”
 #   which is typically required due to Calibre’s trust prompt model
+#
+# * how to use with Kindle-on-Android:
+#   https://www.reddit.com/r/Calibre/comments/1is090x/feb_2025_macfriendly_android_emulator_guide_for/?tl=de
+#
+#    1. adb backup com.amazon.kindle (results in *.ab file)
+#    2. adb pull /sdcard/Android/data/com.amazon.kindle/files /tmp/android-kindle-files
+#    3. Calibre --> Settings --> Plugins --> DeDRM --> Edit Plugin --> (+) Kindle for Android --> select .ab file
+#    4. open /tmp/android-kindle-files in Calibre (open directory with subdirectories)
 
 { config, pkgs, lib, ... }:
 
