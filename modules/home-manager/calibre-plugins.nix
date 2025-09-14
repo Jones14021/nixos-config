@@ -14,7 +14,7 @@ let
     repo = "DeDRM_tools";
     rev = "v10.0.3";
     # To discover the correct sha256, temporarily set sha256 = lib.fakeSha256;
-    sha256 = "sha256-BqRcN7ItZdB4d1MOLzsDXCruViyTOt395x/kJLHxOIs="; # Git SHA-1: 44db6b6ee8c0094a98c33770575a9070ddb90fda
+    sha256 = "sha256-BqRcN7ItZdB4d1MOLzsDXCruViyTOt395x/kJLHxOIs=";
   };
 
   kfxInput = pkgs.fetchFromGitHub {    
@@ -22,7 +22,7 @@ let
     repo = "calibre-kfx-input";
     rev = "main";
     # To discover the correct sha256, temporarily set sha256 = lib.fakeSha256;
-    sha256 = "sha256-wO+dsF23c6p8jPpHKWHrSnFNpo92lHxLGNX+NYYZnHE=";
+    sha256 = "sha256-wO+dsF23c6p8jPpHKWHrSnFNpo92lHxLGNX+NYYZnHE="; # Git SHA-1: 44db6b6ee8c0094a98c33770575a9070ddb90fda, version 2.25.0
   };
 
   # KFX Input plugin (from Calibre plugin index)
