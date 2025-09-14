@@ -25,6 +25,7 @@
     android-tools
     git-lfs
     wireshark
+    scrcpy
     
     # 3rd party
     google-chrome
