@@ -23,6 +23,7 @@
     usbutils
     bash
     android-tools
+    git-lfs
     
     # 3rd party
     google-chrome
