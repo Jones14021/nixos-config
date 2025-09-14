@@ -35,6 +35,7 @@
     iperf
     onlyoffice-desktopeditors
     pdfarranger
+    pdftricks
     foliate
     calibre
 
