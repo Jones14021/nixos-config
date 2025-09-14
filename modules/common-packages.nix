@@ -24,6 +24,7 @@
     bash
     android-tools
     git-lfs
+    wireshark
     
     # 3rd party
     google-chrome
@@ -61,6 +62,9 @@
   # enable installed services and programs  
   networking.networkmanager.enable = true;
   programs.firefox.enable = true;
+  programs.wireshark.enable = true;
+  programs.wireshark.usbmon.enable = true;
+  programs.wireshark.dumpcap.enable = true;
 
   # Audio & multimedia
   services.pulseaudio.enable = false;
