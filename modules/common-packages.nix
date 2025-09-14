@@ -6,6 +6,7 @@
     ./tailscale.nix
     ./mobilesheets-companion.nix
     ./snapmaker-luban.nix
+    ./calibre-overlay.nix
   ];
 
   environment.systemPackages = with pkgs; [

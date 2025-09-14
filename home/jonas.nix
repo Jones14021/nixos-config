@@ -7,7 +7,8 @@
 
   imports = [
     # Import other personal Home Manager/personal modules here if needed
-    ../modules/onedrive.nix
+    ../modules/home-manager/onedrive.nix
+    ../modules/home-manager/calibre-plugins.nix
   ];
 
   home.packages = with pkgs; [
