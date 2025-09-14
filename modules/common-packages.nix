@@ -26,6 +26,7 @@
     android-tools
     git-lfs
     wireshark
+    wl-clipboard
     
     # 3rd party
     google-chrome
@@ -42,6 +43,10 @@
     pdftricks
     foliate
     calibre
+
+    # Android stuff
+    waydroid # https://gist.github.com/newtolinux23/522755a66d8ebd7eed1b3c410bc4319d
+    unstablePkgs.waydroid-helper
 
     # Windows apps
     self.packages.${pkgs.system}.fusion360
@@ -66,6 +71,7 @@
   programs.wireshark.enable = true;
   programs.wireshark.usbmon.enable = true;
   programs.wireshark.dumpcap.enable = true;
+  virtualisation.waydroid.enable = true;
 
   # Audio & multimedia
   services.pulseaudio.enable = false;
