@@ -34,6 +34,9 @@
     usbview
     iperf
     onlyoffice-desktopeditors
+    pdfarranger
+    foliate
+    calibre
 
     # Windows apps
     self.packages.${pkgs.system}.fusion360
