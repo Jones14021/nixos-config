@@ -45,6 +45,7 @@
     pinta
     audacity
     simple-scan
+    textsnatcher # OCR
 
     # android stuff
     android-tools
