@@ -42,6 +42,7 @@
     pdftricks
     foliate
     calibre
+    pinta
 
     # android stuff
     android-tools
