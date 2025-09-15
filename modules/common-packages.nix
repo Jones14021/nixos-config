@@ -23,10 +23,8 @@
     gparted
     usbutils
     bash
-    android-tools
     git-lfs
     wireshark
-    scrcpy
     nethogs
     
     # 3rd party
@@ -44,6 +42,10 @@
     pdftricks
     foliate
     calibre
+
+    # android stuff
+    android-tools
+    scrcpy
 
     # Windows apps
     self.packages.${pkgs.system}.fusion360
