@@ -44,6 +44,7 @@
     calibre
     pinta
     audacity
+    simple-scan
 
     # android stuff
     android-tools
