@@ -45,6 +45,12 @@
       "services/io.missioncenter.MissionCenter.desktop" = {
         _launch="Ctrl+Shift+Esc";
       };
+
+      # take screenshot
+      "services/org.kde.spectacle.desktop" = {
+        RectangularRegionScreenShot="Meta+Shift+S";
+        _launch="Print";
+      };
     };
   };
 
