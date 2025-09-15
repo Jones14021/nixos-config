@@ -43,6 +43,7 @@
     foliate
     calibre
     pinta
+    audacity
 
     # android stuff
     android-tools
