@@ -5,6 +5,7 @@
     ../../modules/common-packages.nix
     ../../modules/linux-kernel.nix
     ../../modules/printing.nix
+    ../../modules/scanning.nix
     # host/role specific modules here    
   ];
 
@@ -30,7 +31,8 @@
   users.users.jonas = {
     isNormalUser = true;
     description = "Jonas Hoermann";
-    extraGroups = [ "networkmanager" "wheel" "fuse" "dialout" "wireshark" ];
+    # To grant your user access to the scanner, add the user to the 'scanner' group or the 'lp' group if your device is also a printer
+    extraGroups = [ "networkmanager" "wheel" "fuse" "dialout" "wireshark" "scanner" "lp"];
   };
 
   environment.systemPackages = with pkgs; [
