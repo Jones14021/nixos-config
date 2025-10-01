@@ -11,8 +11,12 @@
 
 # utsushi backend disabled because it does not offer an obvious advantage
 
-{ pkgs, lib, ... }:
+# vuescan proprietary app added because it offers a fallback support for a wide variety of scanners
 
+{ pkgs, lib, ... }:
+let
+  vuescan = pkgs.callPackage ./vuescan.nix { };
+in
 {
     hardware.sane.enable = true;
     hardware.sane.extraBackends = [
@@ -20,5 +24,12 @@
         #pkgs.utsushi # Epson ImageScanV3 (utsushi) backend    
     ];
 
-    #services.udev.packages = [ pkgs.utsushi ];
+    environment.systemPackages = [
+        vuescan
+    ];
+
+    services.udev.packages = [
+        #pkgs.utsushi
+        vuescan
+    ];
 }
