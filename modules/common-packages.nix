@@ -46,6 +46,7 @@
     audacity
     simple-scan
     textsnatcher # OCR
+    planify
 
     # android stuff
     android-tools
