@@ -26,6 +26,9 @@
     git-lfs
     wireshark
     nethogs
+    nmap
+    inetutils
+    progress
     
     # 3rd party
     google-chrome
