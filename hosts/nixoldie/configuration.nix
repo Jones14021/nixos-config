@@ -32,7 +32,7 @@
     isNormalUser = true;
     description = "Jonas Hoermann";
     # To grant your user access to the scanner, add the user to the 'scanner' group or the 'lp' group if your device is also a printer
-    extraGroups = [ "networkmanager" "wheel" "fuse" "dialout" "wireshark" "scanner" "lp"];
+    extraGroups = [ "networkmanager" "wheel" "fuse" "dialout" "wireshark" "scanner" "lp" "docker"];
   };
 
   environment.systemPackages = with pkgs; [

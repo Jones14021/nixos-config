@@ -1,4 +1,4 @@
-{ pkgs, unstablePkgs, nixosConfEditor, self, ... }:
+{ pkgs, unstablePkgs, nixosConfEditor, winboat, self, ... }:
 {
   imports = [
     ./nix-software-center.nix
@@ -7,6 +7,7 @@
     ./mobilesheets-companion.nix
     ./snapmaker-luban.nix
     ./nethogs-rootless.nix
+    ./virtualisation.nix
   ];
 
   environment.systemPackages = with pkgs; [
@@ -50,6 +51,7 @@
     simple-scan
     textsnatcher # OCR
     planify
+    freerdp
 
     # android stuff
     android-tools
@@ -70,6 +72,7 @@
     kdePackages.kconfig # for kwriteconfig6
 
     # If needed: (imported flake input/flaked package here, see below)
+    winboat.packages.${pkgs.system}.winboat
   ];
 
   # enable installed services and programs  
@@ -78,6 +81,7 @@
   programs.wireshark.enable = true;
   programs.wireshark.usbmon.enable = true;
   programs.wireshark.dumpcap.enable = true;
+  virtualisation.docker.enable = true; # additional config in modules/virtualisation.nix
 
   # Audio & multimedia
   services.pulseaudio.enable = false;
