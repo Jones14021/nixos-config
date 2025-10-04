@@ -59,6 +59,7 @@
 
     # Windows apps
     self.packages.${pkgs.system}.fusion360
+    p3x-onenote
 
     # flatpak related stuff
     warehouse
