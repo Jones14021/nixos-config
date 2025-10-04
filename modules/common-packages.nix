@@ -7,6 +7,8 @@
     ./mobilesheets-companion.nix
     ./snapmaker-luban.nix
     ./nethogs-rootless.nix
+    ./winboat.nix
+    ./virtualisation.nix
   ];
 
   environment.systemPackages = with pkgs; [
@@ -78,6 +80,8 @@
   programs.wireshark.enable = true;
   programs.wireshark.usbmon.enable = true;
   programs.wireshark.dumpcap.enable = true;
+  virtualisation.docker.enable = true; # additional config in modules/virtualisation.nix
+  services.winboat-appimage.enable = true;
 
   # Audio & multimedia
   services.pulseaudio.enable = false;
