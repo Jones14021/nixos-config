@@ -78,6 +78,7 @@
 
     # If needed: (imported flake input/flaked package here, see below)
     winboat.packages.${pkgs.system}.winboat
+    self.packages.${pkgs.system}.systemd-manager
   ];
 
   # enable installed services and programs  
