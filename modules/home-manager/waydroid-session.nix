@@ -8,16 +8,14 @@ let
     sha256 = "sha256-gibQW+GImbk364WHdWEwQtpSVV5ojR6PvzAi/s6xEHs=";
   };
 
-  #kindleApk = pkgs.fetchurl {
-  #  # APKMirror hosts multiple splits; prefer the universal/armv7 build that matches Waydroid image
-  #  # Replace with the direct .apk URL for your version from the chosen mirror
-  #  # https://kindle.de.uptodown.com/android/versions
-  #  # https://www.reddit.com/r/Calibre/comments/1is090x/feb_2025_macfriendly_android_emulator_guide_for/?tl=de
-  #  # version 4.16.0.75 recommended
-  #  url = "https://www.apkmirror.com/wp-content/themes/APKMirror/download.php?id=8934498";
-  #  # To discover the correct sha256, temporarily set sha256 = lib.fakeSha256;
-  #  sha256 = "sha256-tkZRhJ7OtXRZBJ5wF+BDAI/OjxRqrR002Y8AJ9h+Tu8=";
-  #};
+  kindleApk = builtins.path {
+    # https://kindle.de.uptodown.com/android/versions
+    # https://www.reddit.com/r/Calibre/comments/1is090x/feb_2025_macfriendly_android_emulator_guide_for/?tl=de
+    # version 4.16.0.75 recommended
+    path = ../../apks/kindle-4-16-0-75.apk;
+    name = "kindle-4-16-0-75.apk";
+    recursive = false; # since this is a single file
+  };
 
   appInstallerScript = pkgs.writeShellScriptBin "waydroid-app-installer" ''
     set -euo pipefail
@@ -25,6 +23,7 @@ let
     # Config: list of APKs to ensure installed
     APKS=(
       "${fdroidApk}"
+      "${kindleApk}"
     )
 
     # Start session if not running
