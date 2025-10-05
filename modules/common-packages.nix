@@ -9,6 +9,7 @@
     ./nethogs-rootless.nix
     ./virtualisation.nix
     ./calibre-overlay.nix
+    ./waydroid.nix
   ];
 
   environment.systemPackages = with pkgs; [
