@@ -8,6 +8,7 @@
     ./snapmaker-luban.nix
     ./nethogs-rootless.nix
     ./virtualisation.nix
+    ./calibre-overlay.nix
   ];
 
   environment.systemPackages = with pkgs; [
