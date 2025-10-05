@@ -53,6 +53,9 @@
     textsnatcher # OCR
     planify
     freerdp
+    baobab # Gnome disk usage viewer
+    turnon # WoL utility
+    gnome-logs
 
     # android stuff
     android-tools
