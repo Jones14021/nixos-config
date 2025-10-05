@@ -32,6 +32,7 @@
     inetutils
     progress
     wineWowPackages.stable # support both 32-bit and 64-bit applications https://nixos.wiki/wiki/Wine
+    wl-clipboard
     
     # 3rd party
     google-chrome
@@ -59,6 +60,10 @@
     android-tools
     scrcpy
 
+    # Android stuff
+    waydroid # https://gist.github.com/newtolinux23/522755a66d8ebd7eed1b3c410bc4319d
+    unstablePkgs.waydroid-helper
+
     # Windows apps
     self.packages.${pkgs.system}.fusion360
     p3x-onenote
@@ -85,6 +90,7 @@
   programs.wireshark.usbmon.enable = true;
   programs.wireshark.dumpcap.enable = true;
   virtualisation.docker.enable = true; # additional config in modules/virtualisation.nix
+  virtualisation.waydroid.enable = true;
 
   # Audio & multimedia
   services.pulseaudio.enable = false;
