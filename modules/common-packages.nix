@@ -56,6 +56,7 @@
     baobab # Gnome disk usage viewer
     turnon # WoL utility
     gnome-logs
+    tor-browser
 
     # android stuff
     android-tools
