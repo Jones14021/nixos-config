@@ -31,6 +31,12 @@
     inetutils
     progress
     wineWowPackages.stable # support both 32-bit and 64-bit applications https://nixos.wiki/wiki/Wine
+    wireguard-tools
+    openresolv
+    gtk3
+    go
+    libayatana-appindicator
+
     
     # 3rd party
     google-chrome
@@ -79,6 +85,7 @@
 
     # If needed: (imported flake input/flaked package here, see below)
     winboat.packages.${pkgs.system}.winboat
+    self.packages.${pkgs.system}.wireguird
   ];
 
   # enable installed services and programs  
@@ -88,6 +95,8 @@
   programs.wireshark.usbmon.enable = true;
   programs.wireshark.dumpcap.enable = true;
   virtualisation.docker.enable = true; # additional config in modules/virtualisation.nix
+  networking.resolvconf.enable = true;
+  security.polkit.enable = true;
 
   # Audio & multimedia
   services.pulseaudio.enable = false;
