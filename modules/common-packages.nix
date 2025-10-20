@@ -1,4 +1,4 @@
-{ pkgs, unstablePkgs, nixosConfEditor, winboat, self, ... }:
+{ pkgs, unstablePkgs, googleChromePkgs, nixosConfEditor, winboat, self, ... }:
 {
   imports = [
     ./nix-software-center.nix
@@ -33,7 +33,7 @@
     wineWowPackages.stable # support both 32-bit and 64-bit applications https://nixos.wiki/wiki/Wine
     
     # 3rd party
-    google-chrome
+    googleChromePkgs.google-chrome
     snapmaker-luban
     cura-appimage
     vscode

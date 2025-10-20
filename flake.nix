@@ -14,6 +14,8 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
+    nixpkgs-google-chrome.url = "github:NixOS/nixpkgs/fe83bbdde2ccdc2cb9573aa846abe8363f79a97a"; # freeze at 139.0.7258.154 until 142 is available
+
     declarative-flatpak.url = "github:in-a-dil-emma/declarative-flatpak/stable-v3";
 
     home-manager = {
@@ -36,7 +38,8 @@
     winboat.url = "github:TibixDev/winboat";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, plasma-manager, nixosConfEditor, erosanix, declarative-flatpak, winboat, ... }: let
+  outputs = { self, nixpkgs, nixpkgs-unstable, nixpkgs-google-chrome, home-manager, plasma-manager, nixosConfEditor
+              , erosanix, declarative-flatpak, winboat, ... }: let
 
     allHosts = [
       {
@@ -89,6 +92,13 @@
             # * Without explicitly using legacyPackages, you might work with the newer packageOverrides
             #   or other evolving interfaces that can break backwards compatibility.
             unstablePkgs = nixpkgs-unstable.legacyPackages.x86_64-linux;
+            # import the pinned nixpkgs for google chrome with allowUnfree enabled
+            # this returns a package set (pkgs), so common-packages can access google-chrome as
+            # googleChromePkgs.google-chrome
+            googleChromePkgs = import nixpkgs-google-chrome {
+              inherit (host) system;
+              config = { allowUnfree = true; };
+            };
             # add more flake packages here if needed
             winboat = winboat;
           };

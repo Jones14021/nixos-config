@@ -174,6 +174,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-google-chrome": {
+      "locked": {
+        "lastModified": 1757020766,
+        "narHash": "sha256-PLoSjHRa2bUbi1x9HoXgTx2AiuzNXs54c8omhadyvp0=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "fe83bbdde2ccdc2cb9573aa846abe8363f79a97a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "fe83bbdde2ccdc2cb9573aa846abe8363f79a97a",
+        "type": "github"
+      }
+    },
     "nixpkgs-unstable": {
       "locked": {
         "lastModified": 1760934318,
@@ -268,6 +284,7 @@
         "home-manager": "home-manager",
         "nixosConfEditor": "nixosConfEditor",
         "nixpkgs": "nixpkgs_3",
+        "nixpkgs-google-chrome": "nixpkgs-google-chrome",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "plasma-manager": "plasma-manager",
         "winboat": "winboat"
