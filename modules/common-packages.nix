@@ -83,6 +83,17 @@
     # e.g. nixosConfEditor.packages.${pkgs.system}.nixos-conf-editor
   ];
 
+  # overlays to customize certain packages
+  nixpkgs.overlays = [
+    # Example overlay to customize google-chrome
+    (final: prev: {
+      google-chrome = prev.google-chrome.override {
+        commandLineArgs = "--disable-gpu";
+      };
+    })
+  # You can add more overlays here to customize other packages
+  ];
+
   # enable installed services and programs  
   networking.networkmanager.enable = true;
   programs.firefox.enable = true;
