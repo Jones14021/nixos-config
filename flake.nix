@@ -32,11 +32,9 @@
     erosanix = {
       url = "github:emmanuelrosa/erosanix";
     };
-
-    winboat.url = "github:TibixDev/winboat";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, plasma-manager, nixosConfEditor, erosanix, declarative-flatpak, winboat, ... }: let
+  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, plasma-manager, nixosConfEditor, erosanix, declarative-flatpak, ... }: let
 
     allHosts = [
       {
@@ -90,7 +88,6 @@
             #   or other evolving interfaces that can break backwards compatibility.
             unstablePkgs = nixpkgs-unstable.legacyPackages.x86_64-linux;
             # add more flake packages here if needed
-            winboat = winboat;
           };
         };
       }) allHosts

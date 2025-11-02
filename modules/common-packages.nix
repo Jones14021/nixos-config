@@ -1,4 +1,4 @@
-{ pkgs, unstablePkgs, nixosConfEditor, winboat, self, ... }:
+{ pkgs, unstablePkgs, nixosConfEditor, self, ... }:
 {
   imports = [
     ./nix-software-center.nix
@@ -65,6 +65,7 @@
     # Windows apps
     self.packages.${pkgs.system}.fusion360
     p3x-onenote
+    unstablePkgs.winboat
 
     # flatpak related stuff
     warehouse
@@ -78,7 +79,7 @@
     kdePackages.kconfig # for kwriteconfig6
 
     # If needed: (imported flake input/flaked package here, see below)
-    winboat.packages.${pkgs.system}.winboat
+    # e.g. nixosConfEditor.packages.${pkgs.system}.nixos-conf-editor
   ];
 
   # enable installed services and programs  
