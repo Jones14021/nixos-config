@@ -1,3 +1,5 @@
+# https://nixos.wiki/wiki/Linux_kernel
+
 { pkgs, ... }:
 
 let
@@ -15,6 +17,6 @@ let
   };
 in
 {
-  boot.kernelPackages = pkgs.linuxPackagesFor pinnedKernel;
-  #boot.kernelPackages = pkgs.linuxPackages_latest;
+  #boot.kernelPackages = pkgs.linuxPackagesFor pinnedKernel;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 }
