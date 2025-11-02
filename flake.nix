@@ -74,7 +74,7 @@
               ];
               home-manager.users.jonas = import host.home;
             }
-            declarative-flatpak.nixosModule
+            declarative-flatpak.nixosModules.default
           ];
           # Pass all flake package inputs as specialArgs
           specialArgs = {
