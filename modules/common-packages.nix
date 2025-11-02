@@ -31,6 +31,7 @@
     inetutils
     progress
     wineWowPackages.stable # support both 32-bit and 64-bit applications https://nixos.wiki/wiki/Wine
+    killall
     
     # 3rd party
     google-chrome
