@@ -66,7 +66,7 @@
     # Windows apps
     self.packages.${pkgs.system}.fusion360
     p3x-onenote
-    unstablePkgs.winboat
+    (unstablePkgs.winboat.override {nodejs_24 = pkgs.nodejs_24;}) # https://github.com/nixos/nixpkgs/issues/462513
 
     # flatpak related stuff
     warehouse
