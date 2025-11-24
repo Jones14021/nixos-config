@@ -94,6 +94,21 @@
   # You can add more overlays here to customize other packages
   ];
 
+  # flatpaks
+  # see documentation for declarative-flatpak https://github.com/in-a-dil-emma/declarative-flatpak
+  services.flatpak = {
+    enable = true;
+
+    remotes = {
+      "flathub" = "https://dl.flathub.org/repo/flathub.flatpakrepo";      
+    };
+
+    packages = [
+      "flathub:app/com.github.tchx84.Flatseal//stable"
+    ];
+  };
+  # see also imported module modules/mobilesheets-companion.nix
+
   # enable installed services and programs  
   networking.networkmanager.enable = true;
   programs.firefox.enable = true;
