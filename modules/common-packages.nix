@@ -15,8 +15,6 @@
     vim
     nano
     git
-    python314
-    python312
     unstablePkgs.uv
     rclone
     fuse
@@ -33,6 +31,18 @@
     wineWowPackages.stable # support both 32-bit and 64-bit applications https://nixos.wiki/wiki/Wine
     killall
     poppler-utils
+
+    # Python
+    python312
+    (python313.withPackages (ps: with ps; [
+      pyserial
+      requests
+      numpy
+      pandas
+      nrfutil
+      esptool
+      pyftdi
+    ]))
     
     # 3rd party
     google-chrome
