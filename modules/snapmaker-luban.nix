@@ -16,7 +16,7 @@ in
     #    })
     #];
 
-    nixpkgs.config.permittedInsecurePackages = [
-        "snapmaker-luban-${version}"
-    ];
+    #nixpkgs.config.permittedInsecurePackages = [
+    #    "snapmaker-luban-${version}"
+    #];
 }

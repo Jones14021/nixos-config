@@ -31,6 +31,12 @@
     wineWowPackages.stable # support both 32-bit and 64-bit applications https://nixos.wiki/wiki/Wine
     killall
     poppler-utils
+    
+    # development
+    nrfutil
+    esptool
+    espflash
+    cmake
 
     # Python
     python312
@@ -39,8 +45,8 @@
       requests
       numpy
       pandas
-      nrfutil
-      esptool
+      matplotlib
+      scipy
       pyftdi
     ]))
     
@@ -139,6 +145,12 @@
   };
 
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.segger-jlink.acceptLicense = true; # for embedded development
+
+  nixpkgs.config.permittedInsecurePackages = [
+    "python3.12-ecdsa-0.19.1"  # for embedded development (nrfutil I think)
+    "snapmaker-luban-4.15.0"
+  ];
 
   environment.variables = {
     SUDO_ASKPASS = "${pkgs.kdePackages.ksshaskpass}/bin/ksshaskpass";
