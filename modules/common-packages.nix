@@ -75,6 +75,7 @@
     turnon # WoL utility
     gnome-logs
     tor-browser
+    unrar # unfree
 
     # android stuff
     android-tools
