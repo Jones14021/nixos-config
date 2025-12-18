@@ -83,6 +83,7 @@
     gnome-logs
     tor-browser
     unrar # unfree
+    upscaler
 
     # android stuff
     android-tools
