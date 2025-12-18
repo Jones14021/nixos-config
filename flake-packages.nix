@@ -13,6 +13,7 @@ with (pkgs // erosanix.packages.${system} // erosanix.lib.${system});
     inherit mkWindowsApp makeDesktopIcon copyDesktopIcons;
     wine = wineWowPackages.base;
   };
+  png2svg = pkgs.callPackage ./pkgs/png2svg { };
   # other packages here e.g.
     #package_name = pkgs.callPackage ./pkgs/someflake {
     #  inherit (anotherneededflake.packages.${system}) mkWindowsApp;
