@@ -7,6 +7,7 @@
     ./mobilesheets-companion.nix
     ./snapmaker-luban.nix
     ./nethogs-rootless.nix
+    ./suspend.nix
     ./virtualisation.nix
   ];
 
