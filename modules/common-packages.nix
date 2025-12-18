@@ -107,6 +107,7 @@
     # If needed: (imported flake input/flaked package here, see below)
     # e.g. nixosConfEditor.packages.${pkgs.system}.nixos-conf-editor
     self.packages.${pkgs.system}.png2svg
+    self.packages.${pkgs.system}.text2img
   ];
 
   # overlays to customize certain packages
