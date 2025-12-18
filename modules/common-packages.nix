@@ -162,6 +162,11 @@
     "snapmaker-luban-4.15.0"
   ];
 
+  # https://nixos.wiki/wiki/Fonts
+  fonts.packages = with pkgs; [
+    google-fonts
+  ];
+
   environment.variables = {
     SUDO_ASKPASS = "${pkgs.kdePackages.ksshaskpass}/bin/ksshaskpass";
   };
