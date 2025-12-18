@@ -38,6 +38,13 @@
     esptool
     espflash
     cmake
+    gnumake
+    file
+    fileinfo
+    htop
+    hexdiff
+    hexdump
+    binutils
 
     # Python
     python312
