@@ -18,7 +18,10 @@
         name = "share/cups/model/okib430.ppd";
         path = ../drivers/OKB430_a.ppd;
     }
-    ]);
+    ])
+    ++ [
+        pkgs.hplip # Drivers for HP printers
+    ];
 
     # issue with systemd.ensure-printers.service failing: https://github.com/NixOS/nixpkgs/issues/78535
     hardware.printers.ensurePrinters = [
