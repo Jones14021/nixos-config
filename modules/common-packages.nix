@@ -104,6 +104,7 @@
     # KDE stuff
     kdePackages.ksshaskpass
     kdePackages.kconfig # for kwriteconfig6
+    kdePackages.plasma-sdk # for plasmoidviewer
 
     # If needed: (imported flake input/flaked package here, see below)
     # e.g. nixosConfEditor.packages.${pkgs.system}.nixos-conf-editor
