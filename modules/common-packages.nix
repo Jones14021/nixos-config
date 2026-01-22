@@ -109,6 +109,7 @@
     # e.g. nixosConfEditor.packages.${pkgs.system}.nixos-conf-editor
     self.packages.${pkgs.system}.png2svg
     self.packages.${pkgs.system}.text2img
+    self.packages.${pkgs.system}.textconnect
   ];
 
   # overlays to customize certain packages
