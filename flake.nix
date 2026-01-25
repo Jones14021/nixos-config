@@ -44,6 +44,13 @@
         config = ./hosts/nixoldie/configuration.nix;
         home = ./home/jonas.nix;
       }
+      {
+        name = "spectre";
+        system = "x86_64-linux";
+        hardwareConfig = ./hosts/spectre/hardware-configuration.nix;
+        config = ./hosts/spectre/configuration.nix;
+        home = ./home/jonas.nix;
+      }
       # , { name = "otherhost"; ... }
     ];
 
