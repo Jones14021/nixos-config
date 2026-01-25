@@ -85,6 +85,7 @@
     unrar # unfree
     upscaler
     handbrake
+    snapshot # GNOME camera app
 
     # android stuff
     android-tools
