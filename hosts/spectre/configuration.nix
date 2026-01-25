@@ -31,6 +31,13 @@
     LC_TIME = "de_DE.UTF-8";
   };
 
+  # enable swap
+  # read more about swap files here: https://wiki.archlinux.org/title/Swap
+  swapDevices = [{
+    device = "/swapfile";
+    size = 16 * 1024; # 16GB
+  }];
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.jonas = {
     isNormalUser = true;
