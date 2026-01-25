@@ -25,11 +25,11 @@ in
     ];
 
     environment.systemPackages = [
-        vuescan
+        #vuescan
     ];
 
     services.udev.packages = [
         #pkgs.utsushi
-        vuescan
+        #vuescan
     ];
 }

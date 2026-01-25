@@ -26,7 +26,7 @@ in stdenv.mkDerivation rec {
 
    src = fetchurl {
      url = "https://www.hamrick.com/files/vuex6497.tgz";
-     hash = "sha256-2nBDY56VFxOylVALy4OaePMwtfqg9ZjnHmH+58tyv5o=";
+     hash = "sha256-C9CqWcNwpEseaBbIW7MbB+ErF//1asbRzzboGrWgJzo=";
    };
 
   # Stripping breaks the program
