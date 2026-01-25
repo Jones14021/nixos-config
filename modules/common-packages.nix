@@ -1,7 +1,6 @@
 { pkgs, unstablePkgs, nixosConfEditor, self, ... }:
 {
   imports = [
-    ./nix-software-center.nix
     ./kde-plasma-6.nix
     ./tailscale.nix
     ./mobilesheets-companion.nix
@@ -98,10 +97,6 @@
 
     # flatpak related stuff
     warehouse
-
-    # ease of life with nix os
-    nix-software-center
-    nixosConfEditor.packages.${pkgs.system}.nixos-conf-editor
 
     # KDE stuff
     kdePackages.ksshaskpass

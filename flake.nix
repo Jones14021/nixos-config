@@ -21,8 +21,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixosConfEditor.url = "github:snowfallorg/nixos-conf-editor";
-
     plasma-manager = {
       url = "github:nix-community/plasma-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -34,7 +32,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, plasma-manager, nixosConfEditor, erosanix, declarative-flatpak, ... }: let
+  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, plasma-manager, erosanix, declarative-flatpak, ... }: let
 
     allHosts = [
       {
@@ -86,7 +84,6 @@
           # Pass all flake package inputs as specialArgs
           specialArgs = {
             inherit self;
-            nixosConfEditor = nixosConfEditor;
             # ----- Why use legacyPackages? -----
             # * Most existing NixOS and Home Manager configurations expect pkgs to be a set of packages
             #   indexed by their names (pkgs.vim, pkgs.firefox, etc.).
