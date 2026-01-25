@@ -31,6 +31,7 @@
     wineWowPackages.stable # support both 32-bit and 64-bit applications https://nixos.wiki/wiki/Wine
     killall
     poppler-utils
+    avahi # for MDNS (SD) support (e.g. avahi-browse)
     
     # development
     nrfutil
@@ -84,6 +85,7 @@
     tor-browser
     unrar # unfree
     upscaler
+    handbrake
 
     # android stuff
     android-tools
