@@ -46,51 +46,37 @@ normalize_outdir() {
 }
 
 download_one() {
-  local url="$1" dl_dir="$2" log_dir="$3"
+  local curl_cmd="$1" dl_dir="$2" log_dir="$3"
   local ts logf
   ts="$(date +%Y%m%d-%H%M%S)"
   logf="$log_dir/curl-$ts.$$.log"
 
   # Accept accidental surrounding spaces.
-  url="${url#"${url%%[![:space:]]*}"}"
-  url="${url%"${url##*[![:space:]]}"}"
+  curl_cmd="${curl_cmd#"${curl_cmd%%[![:space:]]*}"}"
+  curl_cmd="${curl_cmd%"${curl_cmd##*[![:space:]]}"}"
 
-  # If the user pasted a "curl '...'" command, try to extract the first URL-like token.
-  if [[ "$url" == curl\ * ]]; then
-    # shellcheck disable=SC2001
-    url="$(echo "$url" | sed -nE "s/.*(https?:\/\/[^'\"[:space:]]+).*/\1/p")"
-    [[ -n "$url" ]] || die "Couldn't parse URL from pasted curl command."
-  fi
+  [[ "$curl_cmd" == curl\ * ]] || die "Expected a full 'curl ...' command (from DevTools -> Copy as cURL)."
 
   (
     cd "$dl_dir"
 
-    # Use a stable per-URL filename so retries/reruns can resume into the same file.
-    # We cannot use -C - (resume) together with -J (remote-header-name), so we choose our own name.
-    # -f fails on HTTP errors, -L follows redirects, -C - resumes partial downloads.
-    # Keep output quiet-ish; log details to file.
+    # Stable per-command filename so retries/reruns can resume into the same file.
+    # (Hash the entire cURL command line; it includes unique URL/params/headers.)
     local name
-    name="takeout-$(echo -n "$url" | sha256sum | awk '{print $1}').tgz"
+    name="takeout-$(echo -n "$curl_cmd" | sha256sum | awk '{print $1}').tgz"
+
     echo "Downloading to: $dl_dir/$name ..."
+    echo "Log: $logf"
 
-    curl -fL -C - \
-      --retry 6 --retry-all-errors --retry-delay 2 \
-      --connect-timeout 20 --max-time 0 \
-      -o "$name" \
-      "$url" \
-      >"$logf" 2>&1
-    
-    # Fast check: is it at least valid gzip?
-    if ! gzip -t "$name" >/dev/null 2>&1; then
-      die "Download is not a valid gzip stream (likely HTML/login page or truncated)."
-    fi
+    # Execute the copied curl command, but:
+    # - ensure output goes to our chosen filename (-o)
+    # - ensure resume is enabled (-C -)
+    # - run quietly (DevTools curl is usually verbose; keep it in the log)
+    #
+    # We append our flags at the end; for curl, later flags override earlier ones.
+    bash -c "$curl_cmd -C - -o \"$name\" --silent --show-error --fail" >"$logf" 2>&1
 
-    # Then: is the tar inside readable (still no extraction; just list to /dev/null)?
-    if ! tar -tf "$name" >/dev/null 2>&1; then
-      die "Download is not a valid tar archive (likely wrong content)."
-    fi
-    
-    echo "Downloaded: $name (log: $logf)"
+    echo "Downloaded: $name"
   )
 }
 
@@ -180,17 +166,41 @@ EOF
   confirm "Continue once Takeout is created and the email with download link(s) arrived?" || exit 0
   echo
 
-  echo "Step 2/5: Enter Takeout download URL(s)"
-  echo "Paste one URL per line (empty line to finish)."
-  echo "Tip: Paste the direct download URLs you get from Takeout; if downloads fail, you may need to grab a direct URL from your browser session."
-  local urls=()
+  echo "Step 2/5: Get Takeout download request(s) (manual, from browser DevTools)"
+  echo "For each Takeout part:"
+  echo "  1) Open the Takeout download link in your browser and make sure you're logged in."
+  echo "  2) Open DevTools, go to the Network tab."
+  echo "  3) Start the download, then cancel it (we only need the authenticated request)."
+  echo "  4) In Network, find the request that downloads the archive (resource), right-click it:"
+  echo "     Copy -> Copy as cURL"
+  echo "  5) Paste that full 'curl ...' line below."
+  echo
+  echo "Paste one cURL command per line (empty line to finish)."
+
+  local curl_cmds=()
   while true; do
-    local line
+    local line cmd
+    cmd=""
+
+    # First line (empty line finishes input)
     read -r -p "> " line || true
     [[ -n "${line// /}" ]] || break
-    urls+=("$line")
+
+    cmd="$line"
+
+    # If the line ends with a backslash (optionally followed by spaces), keep reading and join.
+    # We strip the trailing "\" + spaces, then add a single space before the next line.
+    while [[ "$cmd" =~ \\[[:space:]]*$ ]]; do
+      cmd="${cmd%\\*}"            # drop trailing "\" and anything after it (spaces)
+      cmd="${cmd%"${cmd##*[![:space:]]}"}"  # trim trailing spaces again
+      read -r -p "  ... " line || true
+      cmd="$cmd $line"
+    done
+
+    curl_cmds+=("$cmd")
   done
-  [[ ${#urls[@]} -ge 1 ]] || die "No URLs provided."
+
+  [[ ${#curl_cmds[@]} -ge 1 ]] || die "No cURL commands provided."
 
   local jobs
   prompt jobs "3" "Parallel downloads"
@@ -198,13 +208,15 @@ EOF
   (( jobs >= 1 )) || die "Parallel downloads must be >= 1."
 
   echo
-  echo "Step 3/5: Downloading ${#urls[@]} part(s) ..."
-  # Run parallel downloads via xargs.
-    printf '%s\0' "${urls[@]}" | xargs -0 -n1 -P "$jobs" -I{} bash -c '
+  echo "Step 3/5: Downloading ${#curl_cmds[@]} part(s) ..."
+  echo "Make sure you've copied each request as cURL from your browser (authenticated)."
+  confirm "Did you already start the downloads in the browser at least once (so the requests are valid)?" || exit 0
+
+  printf '%s\0' "${curl_cmds[@]}" | xargs -0 -P "$jobs" -I{} bash -c '
     set -euo pipefail
-    url="$1"; dl_dir="$2"; log_dir="$3"
+    cmd="$1"; dl_dir="$2"; log_dir="$3"
     '"$(declare -f die need download_one)"'
-    download_one "$url" "$dl_dir" "$log_dir"
+    download_one "$cmd" "$dl_dir" "$log_dir"
   ' _ "{}" "$dl_dir" "$log_dir"
 
   echo "Downloads complete."
