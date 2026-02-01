@@ -64,13 +64,33 @@ download_one() {
 
   (
     cd "$dl_dir"
-    # -C - enables resume, -L follows redirects, -J/-O honor server filename (Content-Disposition) when available.
+
+    # Use a stable per-URL filename so retries/reruns can resume into the same file.
+    # We cannot use -C - (resume) together with -J (remote-header-name), so we choose our own name.
+    # -f fails on HTTP errors, -L follows redirects, -C - resumes partial downloads.
     # Keep output quiet-ish; log details to file.
-    curl -fL -C - -J -O \
+    local name
+    name="takeout-$(echo -n "$url" | sha256sum | awk '{print $1}').tgz"
+    echo "Downloading to: $dl_dir/$name ..."
+
+    curl -fL -C - \
       --retry 6 --retry-all-errors --retry-delay 2 \
       --connect-timeout 20 --max-time 0 \
+      -o "$name" \
       "$url" \
       >"$logf" 2>&1
+    
+    # Fast check: is it at least valid gzip?
+    if ! gzip -t "$name" >/dev/null 2>&1; then
+      die "Download is not a valid gzip stream (likely HTML/login page or truncated)."
+    fi
+
+    # Then: is the tar inside readable (still no extraction; just list to /dev/null)?
+    if ! tar -tf "$name" >/dev/null 2>&1; then
+      die "Download is not a valid tar archive (likely wrong content)."
+    fi
+    
+    echo "Downloaded: $name (log: $logf)"
   )
 }
 
@@ -180,12 +200,12 @@ EOF
   echo
   echo "Step 3/5: Downloading ${#urls[@]} part(s) ..."
   # Run parallel downloads via xargs.
-  printf '%s\0' "${urls[@]}" | xargs -0 -n1 -P "$jobs" bash -c '
+    printf '%s\0' "${urls[@]}" | xargs -0 -n1 -P "$jobs" -I{} bash -c '
     set -euo pipefail
     url="$1"; dl_dir="$2"; log_dir="$3"
     '"$(declare -f die need download_one)"'
     download_one "$url" "$dl_dir" "$log_dir"
-  ' _ '{}' "$dl_dir" "$log_dir"
+  ' _ "{}" "$dl_dir" "$log_dir"
 
   echo "Downloads complete."
   echo
