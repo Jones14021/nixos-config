@@ -166,61 +166,78 @@ EOF
   confirm "Continue once Takeout is created and the email with download link(s) arrived?" || exit 0
   echo
 
-  echo "Step 2/5: Get Takeout download request(s) (manual, from browser DevTools)"
-  echo "For each Takeout part:"
-  echo "  1) Open the Takeout download link in your browser and make sure you're logged in."
-  echo "  2) Open DevTools, go to the Network tab."
-  echo "  3) Start the download, then cancel it (we only need the authenticated request)."
-  echo "  4) In Network, find the request that downloads the archive (resource), right-click it:"
-  echo "     Copy -> Copy as cURL"
-  echo "  5) Paste that full 'curl ...' line below."
-  echo
-  echo "Paste one cURL command per line (empty line to finish)."
+  # If downloads already exist, offer skipping Step 2+3.
+  mapfile -t existing_archives < <(find "$dl_dir" -maxdepth 1 -type f -name '*.tgz' | sort)
+  skip_downloads="no"
+  if [[ ${#existing_archives[@]} -gt 0 ]]; then
+    echo
+    echo "Found existing download(s) in: $dl_dir"
+    echo "  ${#existing_archives[@]} .tgz file(s) already present."
+    if confirm "Skip Step 2+3 (download) and reuse existing files?"; then
+      skip_downloads="yes"
+    fi
+  fi
 
-  local curl_cmds=()
-  while true; do
-    local line cmd
-    cmd=""
+  if [[ "$skip_downloads" != "yes" ]]; then
 
-    # First line (empty line finishes input)
-    read -r -p "> " line || true
-    [[ -n "${line// /}" ]] || break
+    echo "Step 2/5: Get Takeout download request(s) (manual, from browser DevTools)"
+    echo "For each Takeout part:"
+    echo "  1) Open the Takeout download link in your browser and make sure you're logged in."
+    echo "  2) Open DevTools, go to the Network tab."
+    echo "  3) Start the download, then cancel it (we only need the authenticated request)."
+    echo "  4) In Network, find the request that downloads the archive (resource), right-click it:"
+    echo "     Copy -> Copy as cURL"
+    echo "  5) Paste that full 'curl ...' line below."
+    echo
+    echo "Paste one cURL command per line (empty line to finish)."
 
-    cmd="$line"
+    local curl_cmds=()
+    while true; do
+      local line cmd
+      cmd=""
 
-    # If the line ends with a backslash (optionally followed by spaces), keep reading and join.
-    # We strip the trailing "\" + spaces, then add a single space before the next line.
-    while [[ "$cmd" =~ \\[[:space:]]*$ ]]; do
-      cmd="${cmd%\\*}"            # drop trailing "\" and anything after it (spaces)
-      cmd="${cmd%"${cmd##*[![:space:]]}"}"  # trim trailing spaces again
-      read -r -p "  ... " line || true
-      cmd="$cmd $line"
+      # First line (empty line finishes input)
+      read -r -p "> " line || true
+      [[ -n "${line// /}" ]] || break
+
+      cmd="$line"
+
+      # If the line ends with a backslash (optionally followed by spaces), keep reading and join.
+      # We strip the trailing "\" + spaces, then add a single space before the next line.
+      while [[ "$cmd" =~ \\[[:space:]]*$ ]]; do
+        cmd="${cmd%\\*}"            # drop trailing "\" and anything after it (spaces)
+        cmd="${cmd%"${cmd##*[![:space:]]}"}"  # trim trailing spaces again
+        read -r -p "  ... " line || true
+        cmd="$cmd $line"
+      done
+
+      curl_cmds+=("$cmd")
     done
 
-    curl_cmds+=("$cmd")
-  done
+    [[ ${#curl_cmds[@]} -ge 1 ]] || die "No cURL commands provided."
 
-  [[ ${#curl_cmds[@]} -ge 1 ]] || die "No cURL commands provided."
+    local jobs
+    prompt jobs "3" "Parallel downloads"
+    [[ "$jobs" =~ ^[0-9]+$ ]] || die "Parallel downloads must be an integer."
+    (( jobs >= 1 )) || die "Parallel downloads must be >= 1."
 
-  local jobs
-  prompt jobs "3" "Parallel downloads"
-  [[ "$jobs" =~ ^[0-9]+$ ]] || die "Parallel downloads must be an integer."
-  (( jobs >= 1 )) || die "Parallel downloads must be >= 1."
+    echo
+    echo "Step 3/5: Downloading ${#curl_cmds[@]} part(s) ..."
+    echo "Make sure you've copied each request as cURL from your browser (authenticated)."
+    confirm "Did you already start the downloads in the browser at least once (so the requests are valid)?" || exit 0
 
-  echo
-  echo "Step 3/5: Downloading ${#curl_cmds[@]} part(s) ..."
-  echo "Make sure you've copied each request as cURL from your browser (authenticated)."
-  confirm "Did you already start the downloads in the browser at least once (so the requests are valid)?" || exit 0
+    export _DL_FUNCS
+    _DL_FUNCS="$(declare -f die need download_one)"
 
-  printf '%s\0' "${curl_cmds[@]}" | xargs -0 -P "$jobs" -I{} bash -c '
-    set -euo pipefail
-    cmd="$1"; dl_dir="$2"; log_dir="$3"
-    '"$(declare -f die need download_one)"'
-    download_one "$cmd" "$dl_dir" "$log_dir"
-  ' _ "{}" "$dl_dir" "$log_dir"
+    printf '%s\0' "${curl_cmds[@]}" | xargs -0 -P "$jobs" -I{} bash -c 'set -euo pipefail; eval "$_DL_FUNCS"; cmd="$1"; dl_dir="$2"; log_dir="$3"; download_one "$cmd" "$dl_dir" "$log_dir"' _ "{}" "$dl_dir" "$log_dir"
 
-  echo "Downloads complete."
-  echo
+    echo "Downloads complete."
+    echo
+
+  else
+    echo "Skipping download step; reusing existing files."
+    echo
+  fi
 
   echo "Step 4/5: Extract + merge into single Takeout/ tree (GPTH input)"
   rm -rf "$merged_dir/Takeout"
