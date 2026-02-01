@@ -74,7 +74,7 @@ download_one() {
     # - run quietly (DevTools curl is usually verbose; keep it in the log)
     #
     # We append our flags at the end; for curl, later flags override earlier ones.
-    bash -c "$curl_cmd -C - -o \"$name\" --silent --show-error --fail" >"$logf" 2>&1
+    bash -c "$curl_cmd -C - -o \"$name\" --silent --show-error --fail --http1.1 --retry 3 --retry-all-errors --retry-delay 5" >"$logf" 2>&1
 
     echo "Downloaded: $name"
   )
