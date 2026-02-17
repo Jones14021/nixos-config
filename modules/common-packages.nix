@@ -31,6 +31,7 @@
     killall
     poppler-utils
     avahi # for MDNS (SD) support (e.g. avahi-browse)
+    appimage-run # for running AppImages with access to necessary dynamically linked libs https://nixos.wiki/wiki/AppImage
     
     # development
     nrfutil
