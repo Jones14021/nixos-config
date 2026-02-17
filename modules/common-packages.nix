@@ -77,7 +77,6 @@
     pinta
     audacity
     simple-scan
-    textsnatcher # OCR
     planify
     freerdp
     baobab # Gnome disk usage viewer
@@ -96,7 +95,7 @@
     # Windows apps
     self.packages.${pkgs.stdenv.hostPlatform.system}.fusion360
     p3x-onenote
-    (unstablePkgs.winboat.override {nodejs_24 = pkgs.nodejs_24;}) # https://github.com/nixos/nixpkgs/issues/462513
+    unstablePkgs.winboat
 
     # flatpak related stuff
     warehouse
