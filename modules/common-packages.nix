@@ -70,6 +70,7 @@
     onlyoffice-desktopeditors
     pdfarranger
     pdftricks
+    pdfgrep
     foliate
     calibre
     pinta
