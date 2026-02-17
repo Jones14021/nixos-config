@@ -93,7 +93,7 @@
     scrcpy
 
     # Windows apps
-    self.packages.${pkgs.system}.fusion360
+    self.packages.${pkgs.stdenv.hostPlatform.system}.fusion360
     p3x-onenote
     (unstablePkgs.winboat.override {nodejs_24 = pkgs.nodejs_24;}) # https://github.com/nixos/nixpkgs/issues/462513
 
@@ -106,9 +106,9 @@
     kdePackages.plasma-sdk # for plasmoidviewer
 
     # If needed: (imported flake input/flaked package here, see below)
-    # e.g. nixosConfEditor.packages.${pkgs.system}.nixos-conf-editor
-    self.packages.${pkgs.system}.png2svg
-    self.packages.${pkgs.system}.text2img
+    # e.g. nixosConfEditor.packages.${pkgs.stdenv.hostPlatform.system}.nixos-conf-editor
+    self.packages.${pkgs.stdenv.hostPlatform.system}.png2svg
+    self.packages.${pkgs.stdenv.hostPlatform.system}.text2img
   ];
 
   # overlays to customize certain packages
