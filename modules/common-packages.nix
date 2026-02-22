@@ -32,6 +32,8 @@
     poppler-utils
     avahi # for MDNS (SD) support (e.g. avahi-browse)
     appimage-run # for running AppImages with access to necessary dynamically linked libs https://nixos.wiki/wiki/AppImage
+    vulkan-loader # for Vulkan support, needed for e.g. Upscaler
+    vulkan-tools
     
     # development
     nrfutil
@@ -84,7 +86,6 @@
     gnome-logs
     tor-browser
     unrar # unfree
-    upscaler
     handbrake
     snapshot # GNOME camera app
 
@@ -109,6 +110,7 @@
     # e.g. nixosConfEditor.packages.${pkgs.stdenv.hostPlatform.system}.nixos-conf-editor
     self.packages.${pkgs.stdenv.hostPlatform.system}.png2svg
     self.packages.${pkgs.stdenv.hostPlatform.system}.text2img
+    self.packages.${pkgs.stdenv.hostPlatform.system}.upscaler
   ];
 
   # overlays to customize certain packages
@@ -136,6 +138,12 @@
     ];
   };
   # see also imported module modules/mobilesheets-companion.nix
+
+  # common hardware support
+  hardware.graphics = { # for GPU support (MESA stack, OpenGL, Vulkan, etc.), needed for e.g. Upscaler
+    enable = true;
+    enable32Bit = true;  # for 32‑bit stuff (Wine etc.)
+  };
 
   # enable installed services and programs  
   networking.networkmanager.enable = true;
