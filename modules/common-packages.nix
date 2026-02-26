@@ -47,6 +47,8 @@
     hexdiff
     hexdump
     binutils
+    circup
+    picocom
 
     # Python
     python312
