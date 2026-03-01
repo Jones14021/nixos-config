@@ -90,6 +90,7 @@
     unrar # unfree
     handbrake
     snapshot # GNOME camera app
+    spotify
 
     # android stuff
     android-tools
