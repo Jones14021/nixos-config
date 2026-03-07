@@ -34,6 +34,9 @@
     appimage-run # for running AppImages with access to necessary dynamically linked libs https://nixos.wiki/wiki/AppImage
     vulkan-loader # for Vulkan support, needed for e.g. Upscaler
     vulkan-tools
+    gvfs  # gio binary + SMB backend
+    cifs-utils
+    samba
     
     # development
     nrfutil
@@ -162,6 +165,7 @@
   programs.wireshark.usbmon.enable = true;
   programs.wireshark.dumpcap.enable = true;
   virtualisation.docker.enable = true; # additional config in modules/virtualisation.nix
+  services.gvfs.enable = true;
 
   # Audio & multimedia
   services.pulseaudio.enable = false;
