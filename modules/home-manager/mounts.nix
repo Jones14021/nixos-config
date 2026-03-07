@@ -1,7 +1,8 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 let
   gio = "${pkgs.glib.bin}/bin/gio";
+  nmcli = "${pkgs.networkmanager}/bin/nmcli";
   user = "hoj43157";
   password = "YOUR_STRONG_PASSWORD"; # TODO: securely handle this
   server = "fs.hs-regensburg.de";
@@ -44,6 +45,8 @@ in {
 
     Service = {
       Type = "oneshot";
+      # This is required so systemd knows the service is still "running" after the mount command finishes
+      RemainAfterExit = true;
       Environment = [
         # Provide the exact path to the GVfs modules so gio knows how to handle smb://
         "GIO_EXTRA_MODULES=${pkgs.gvfs}/lib/gio/modules"
@@ -51,6 +54,79 @@ in {
       # Note the '< %h/.smboth' which feeds the credentials to the command.
       # %h resolves to your home directory in systemd.
       ExecStart = "${pkgs.runtimeShell} -c \"${gio} mount ${address} < %h/.smboth\"";
+
+      # Stop: Graceful unmount with a lazy unmount fallback for frozen networks
+      # If you manually run systemctl --user stop oth-userhome-mount while connected,
+      # it cleanly unmounts via gio.
+      ExecStop = "${pkgs.writeShellScript "unmount-oth-smb" ''
+        echo "Unmounting OTH share..."
+        ${gio} mount -u ${address} || true
+        
+        # Fallback hard-kill for the FUSE mount if the network is totally dead
+        MOUNT_DIR=\"/run/user/$(id -u)/gvfs/smb-share:server=fs.hs-regensburg.de,share=storage\"
+        if mountpoint -q \"$MOUNT_DIR\"; then
+          umount -l \"$MOUNT_DIR\" || true
+        fi
+      ''}";
+    };
+
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+  };
+
+  # Monitor Service (Runs continuously, watches for VPN connect/disconnect)
+  systemd.user.services."oth-vpn-monitor" = {
+    Unit = {
+      Description = "Monitor OTH VPN state and toggle SMB mount";
+      After = [ "NetworkManager.service" ];
+    };
+
+    Service = {
+      Type = "simple";
+      ExecStart = "${pkgs.writeShellScript "oth-vpn-monitor-script" ''
+        NMCLI="${nmcli}"
+
+        # Keep track of our own perceived state so we don't spam start/stop commands
+        CURRENT_STATE="down"
+
+        # Check initial state on boot
+        if $NMCLI con show --active | grep -q "OTH"; then
+           CURRENT_STATE="up"
+           systemctl --user start oth-userhome-mount
+        fi
+
+        # Listen to NetworkManager events
+        $NMCLI monitor | while read -r line; do
+          
+          # We only care if the output mentions OTH, ppp0 (the vpn tunnel), or NetworkManager state
+          if echo "$line" | grep -E -q "(OTH|ppp0)"; then
+            
+            # Give NetworkManager 1 second to settle its internal state
+            sleep 1
+
+            # Check the *actual* current state of the connection
+            if $NMCLI con show --active | grep -q "OTH"; then
+               # VPN is UP
+               if [ "$CURRENT_STATE" = "down" ]; then
+                  echo "VPN connected. Starting mount..."
+                  systemctl --user start oth-userhome-mount
+                  CURRENT_STATE="up"
+               fi
+            else
+               # VPN is DOWN
+               if [ "$CURRENT_STATE" = "up" ]; then
+                  echo "VPN disconnected. Stopping mount..."
+                  systemctl --user stop oth-userhome-mount
+                  CURRENT_STATE="down"
+               fi
+            fi
+
+          fi
+        done
+      ''}";
+      Restart = "always";
+      RestartSec = 5;
     };
 
     Install = {
