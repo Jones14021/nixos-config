@@ -24,11 +24,19 @@ in {
 
       # First delete any existing connection named OTH (ignore failure),
       # then create it, then configure the VPN parameters.
-      ExecStart = [
-        "${pkgs.runtimeShell} -c \"${nmcli} con delete OTH || true\""
-        "${pkgs.runtimeShell} -c \"${nmcli} con add type vpn vpn-type org.freedesktop.NetworkManager.fortisslvpn con-name OTH\""
-        "${pkgs.runtimeShell} -c \"${nmcli} con mod OTH vpn.data \\\"gateway=${gateway},otp-flags=0,password-flags=1,realm=vpn-default,trusted-cert=${trustedCert},user=${user}\\\"\""
-      ];
+      ExecStart = "${pkgs.writeShellScript "setup-oth-vpn-script" ''
+        NMCLI=\"${pkgs.networkmanager}/bin/nmcli\"
+
+        # Check if the connection exists (sends output to null)
+        if ! $NMCLI con show \"OTH\" >/dev/null 2>&1; then
+          # If it doesn't exist, create it
+          $NMCLI con add type vpn vpn-type org.freedesktop.NetworkManager.fortisslvpn con-name \"OTH\"
+        fi
+
+        # Always update the configuration in case gateway, cert, or user changes.
+        # This will NOT overwrite an existing stored password (vpn.secrets).
+        $NMCLI con mod \"OTH\" vpn.data \"gateway=${gateway},otp-flags=0,password-flags=1,realm=vpn-default,trusted-cert=${trustedCert},user=${user}\"
+      ''}";
 
       # NOTE:
       # - To set the VPN password permanently, run:
