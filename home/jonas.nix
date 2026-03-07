@@ -9,6 +9,7 @@
     # Import other personal Home Manager/personal modules here if needed
     ../modules/home-manager/onedrive.nix
     ../modules/home-manager/git.nix
+    ../modules/home-manager/forticlient-oth.nix
     ../modules/home-manager/plasma-manager/shortcuts.nix
     ../modules/home-manager/plasma-manager/widgets.nix
   ];

@@ -91,6 +91,8 @@
     handbrake
     snapshot # GNOME camera app
     spotify
+    openfortivpn
+    ppp # for openfortivpn
 
     # android stuff
     android-tools
@@ -149,7 +151,12 @@
   };
 
   # enable installed services and programs  
-  networking.networkmanager.enable = true;
+  networking.networkmanager = {
+    enable = true;
+    plugins = with pkgs; [
+      networkmanager-fortisslvpn
+    ];
+  };
   programs.firefox.enable = true;
   programs.wireshark.enable = true;
   programs.wireshark.usbmon.enable = true;
