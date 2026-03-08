@@ -121,6 +121,7 @@
     self.packages.${pkgs.stdenv.hostPlatform.system}.text2img
     self.packages.${pkgs.stdenv.hostPlatform.system}.upscaler
     self.packages.${pkgs.stdenv.hostPlatform.system}.bms-tools
+    self.packages.${pkgs.stdenv.hostPlatform.system}.md2pdf
   ];
 
   # overlays to customize certain packages
