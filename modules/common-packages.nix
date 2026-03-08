@@ -97,6 +97,7 @@
     spotify
     openfortivpn
     ppp # for openfortivpn
+    pandoc
 
     # android stuff
     android-tools
