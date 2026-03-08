@@ -37,6 +37,7 @@
     gvfs  # gio binary + SMB backend
     cifs-utils
     samba
+    tree
     
     # development
     nrfutil
