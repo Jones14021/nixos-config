@@ -6,7 +6,8 @@
     ../../modules/linux-kernel.nix
     ../../modules/printing.nix
     ../../modules/scanning.nix
-    # host/role specific modules here    
+    ../../modules/bluetooth.nix
+    # host/role specific modules here
   ];
 
   boot.loader.systemd-boot.enable = true;
