@@ -5,6 +5,7 @@
 , gtk3
 , gsettings-desktop-schemas
 , wrapGAppsHook3
+, makeWrapper
 }:
 
 python3Packages.buildPythonApplication {
@@ -29,6 +30,8 @@ python3Packages.buildPythonApplication {
     # GSETTINGS_SCHEMA_DIR, and icon/theme paths so GTK and Pango don't crash
     # or emit font/schema warnings at runtime
     wrapGAppsHook3
+    # Needed to modify the PATH of the ble bridge bash script
+    makeWrapper 
   ];
 
   buildInputs = [
@@ -50,6 +53,7 @@ python3Packages.buildPythonApplication {
     # Must come from Nixpkgs — never let pip build this from source,
     # as it takes 17+ minutes and breaks on Python 3.13
     wxpython
+    ble-serial
   ];
 
   doCheck = false;
@@ -86,6 +90,15 @@ runpy.run_path(os.path.join(gui_dir, "jbd_gui.py"), run_name="__main__")
 EOF
 
     chmod +x $out/bin/bms-tools-gui
+
+    # Install the BLE bridge script
+    install -Dm755 ${./bms-tools-ble-bridge.sh} $out/bin/bms-tools-ble-bridge
+
+    # Wrap the bash script to ensure it can find 'ble-scan', 'ble-serial', 
+    # and 'bluetoothctl' regardless of the user's current environment PATH.
+    # Use python3Packages.ble-serial explicitly here to resolve its bin/ path.
+    wrapProgram $out/bin/bms-tools-ble-bridge \
+      --prefix PATH : ${lib.makeBinPath [ python3Packages.ble-serial pkgs.bluez ]}
   '';
 
   meta = with lib; {
