@@ -147,6 +147,7 @@
 
     packages = [
       "flathub:app/com.github.tchx84.Flatseal//stable"
+      "flathub:app/com.thincast.client//1.1.687" # as a Windows-like RDP client
     ];
   };
   # see also imported module modules/mobilesheets-companion.nix
