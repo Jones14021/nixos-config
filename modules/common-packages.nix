@@ -98,6 +98,7 @@
     openfortivpn
     ppp # for openfortivpn
     pandoc
+    zotero
 
     # android stuff
     android-tools
