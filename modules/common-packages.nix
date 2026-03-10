@@ -123,6 +123,7 @@
     self.packages.${pkgs.stdenv.hostPlatform.system}.upscaler
     self.packages.${pkgs.stdenv.hostPlatform.system}.bms-tools
     self.packages.${pkgs.stdenv.hostPlatform.system}.md2pdf
+    self.packages.${pkgs.stdenv.hostPlatform.system}.latex-vscode
   ];
 
   # overlays to customize certain packages

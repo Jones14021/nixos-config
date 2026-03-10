@@ -18,6 +18,7 @@ with (pkgs // erosanix.packages.${system} // erosanix.lib.${system});
   upscaler = pkgs.callPackage ./pkgs/upscaler { };
   bms-tools = pkgs.callPackage ./pkgs/bms-tools { };
   md2pdf = pkgs.callPackage ./pkgs/md2pdf { };
+  latex-vscode = pkgs.callPackage ./pkgs/latex-vscode { };
   # other packages here e.g.
     #package_name = pkgs.callPackage ./pkgs/someflake {
     #  inherit (anotherneededflake.packages.${system}) mkWindowsApp;
