@@ -7,6 +7,7 @@
     ./snapmaker-luban.nix
     ./nethogs-rootless.nix
     ./virtualisation.nix
+    ./zotero.nix
   ];
 
   environment.systemPackages = with pkgs; [
