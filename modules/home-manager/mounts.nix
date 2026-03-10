@@ -55,6 +55,11 @@ in {
       Unit.Description = "Create SMB credentials file for ${name} mount";
       Service = {
         Type = "oneshot";
+
+        Environment = [
+          "PATH=${lib.makeBinPath [ pkgs.coreutils ]}"
+        ];
+
         # Check if the file exists before writing, but always apply chmod at the end.
         ExecStart = "${pkgs.writeShellScript "create-smb-creds-${name}" ''
           FILE="$HOME/.smb_${name}"
@@ -91,9 +96,21 @@ in {
 
         # %h resolves to home directory in systemd.
         ExecStart = "${pkgs.writeShellScript "mount-${name}-smb" ''
+
+          MOUNT_DIR="/run/user/$(id -u)/gvfs/smb-share:server=${m.server},share=${m.shareName}"
+          
+          # If it's already mounted, exit with 0 so systemd marks it 'active'
+          if mountpoint -q "$MOUNT_DIR"; then
+            echo "Share ${name} is already mounted. Skipping mount command."
+            exit 0
+          else
+            echo "Share ${name} is not mounted. Proceeding with mount command."
+          fi
+
           # wait a moment to ensure network is fully up and DNS is resolved (especially important for VPNs)
           sleep 3
           echo "Mounting ${name} share..."
+          echo "${gio} mount smb://${m.server}/${m.shareName}/${m.subPath} < %h/.smb_${name}"
           ${gio} mount smb://${m.server}/${m.shareName}/${m.subPath} < %h/.smb_${name}
         ''}";
 
@@ -131,11 +148,11 @@ in {
 
         ExecStart = "${pkgs.writeShellScript "${name}-vpn-monitor-script" ''
           NMCLI="${nmcli}"
-          CURRENT_STATE="down"
 
           # Check initial state on boot
           if $NMCLI con show --active | grep -qE "${m.vpnPattern}"; then
              CURRENT_STATE="up"
+             echo "Network is up on startup. Starting mount ${name}..."
              systemctl --user start ${name}-mount
           fi
 
