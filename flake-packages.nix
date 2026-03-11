@@ -18,6 +18,12 @@ with (pkgs // erosanix.packages.${system} // erosanix.lib.${system});
   upscaler = pkgs.callPackage ./pkgs/upscaler { };
   bms-tools = pkgs.callPackage ./pkgs/bms-tools { };
   md2pdf = pkgs.callPackage ./pkgs/md2pdf { };
+  dns-leak-test = pkgs.callPackage ./pkgs/dns-leak-test { };
+  wireguard-extract-secrets = pkgs.callPackage ./pkgs/wireguard-extract-secrets { };
+  vpn-tray = pkgs.callPackage ./pkgs/vpn-tray {
+    inherit (pkgs.qt6Packages) wrapQtAppsHook qtbase qtwayland;
+    inherit python3 systemd;
+  };
   # other packages here e.g.
     #package_name = pkgs.callPackage ./pkgs/someflake {
     #  inherit (anotherneededflake.packages.${system}) mkWindowsApp;

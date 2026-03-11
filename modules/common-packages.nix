@@ -7,6 +7,7 @@
     ./snapmaker-luban.nix
     ./nethogs-rootless.nix
     ./virtualisation.nix
+    ./wireguard.nix
   ];
 
   environment.systemPackages = with pkgs; [
@@ -38,6 +39,7 @@
     cifs-utils
     samba
     tree
+    wireguard-tools # 'wg' command
     
     # development
     nrfutil
@@ -123,6 +125,9 @@
     self.packages.${pkgs.stdenv.hostPlatform.system}.upscaler
     self.packages.${pkgs.stdenv.hostPlatform.system}.bms-tools
     self.packages.${pkgs.stdenv.hostPlatform.system}.md2pdf
+    self.packages.${pkgs.stdenv.hostPlatform.system}.dns-leak-test
+    self.packages.${pkgs.stdenv.hostPlatform.system}.wireguard-extract-secrets
+    self.packages.${pkgs.stdenv.hostPlatform.system}.vpn-tray
   ];
 
   # overlays to customize certain packages
