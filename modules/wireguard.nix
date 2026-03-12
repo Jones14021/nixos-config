@@ -100,16 +100,27 @@ let
       postUp = lib.optionalString vpn.killswitch ''
         ENDPOINT_IP=$(${pkgs.coreutils}/bin/echo "${vpn.endpoint}" | ${pkgs.coreutils}/bin/cut -d: -f1)
 
-        # Tell Tailscale to stop hijacking DNS so Windscribe's DNS can take over
-        ${pkgs.tailscale}/bin/tailscale set --accept-dns=false
+        # 1. Save current Tailscale DNS state, then disable it safely
+        # We query the local tailscaled API for the raw preference boolean.
+        TS_STATE_FILE="/run/wg-quick-${vpn.name}-ts-dns.state"
+        
+        # Check if tailscale is running and extract the CorpDNS (accept-dns) preference
+        if ${pkgs.tailscale}/bin/tailscale status &>/dev/null; then
+          TS_DNS_STATUS=$(${pkgs.tailscale}/bin/tailscale debug prefs | ${pkgs.jq}/bin/jq -r '.CorpDNS')
+          ${pkgs.coreutils}/bin/echo "$TS_DNS_STATUS" > "$TS_STATE_FILE"
+          
+          # Tell Tailscale to stop hijacking DNS so Windscribe's DNS can take over
+          if [ "$TS_DNS_STATUS" = "true" ]; then
+            ${pkgs.tailscale}/bin/tailscale set --accept-dns=false
+          fi
+        else
+          # Tailscale isn't running, write a dummy state
+          ${pkgs.coreutils}/bin/echo "false" > "$TS_STATE_FILE"
+        fi
 
-        # 1. Allow WireGuard encrypted traffic out to Windscribe
+        # 2. Allow WireGuard encrypted traffic out to Windscribe
         ${pkgs.iptables}/bin/iptables -I OUTPUT -d $ENDPOINT_IP -j ACCEPT
         ${pkgs.iptables}/bin/ip6tables -I OUTPUT -d $ENDPOINT_IP -j ACCEPT 2>/dev/null || true
-
-        # 2. Allow Tailscale heartbeat/control traffic to bypass the kill switch
-        ${pkgs.iptables}/bin/iptables -I OUTPUT -o tailscale0 -j ACCEPT
-        ${pkgs.iptables}/bin/ip6tables -I OUTPUT -o tailscale0 -j ACCEPT 2>/dev/null || true
 
         # 3. Apply the strict kill switch to the bottom of the chain
         ${pkgs.iptables}/bin/iptables -A OUTPUT ! -o ${vpn.name} -m mark ! --mark $(${pkgs.wireguard-tools}/bin/wg show ${vpn.name} fwmark) -m addrtype ! --dst-type LOCAL -j REJECT
@@ -123,15 +134,19 @@ let
         ${pkgs.iptables}/bin/iptables -D OUTPUT -d $ENDPOINT_IP -j ACCEPT
         ${pkgs.iptables}/bin/ip6tables -D OUTPUT -d $ENDPOINT_IP -j ACCEPT 2>/dev/null || true
 
-        ${pkgs.iptables}/bin/iptables -D OUTPUT -o tailscale0 -j ACCEPT
-        ${pkgs.iptables}/bin/ip6tables -D OUTPUT -o tailscale0 -j ACCEPT 2>/dev/null || true
-
         # Clean up the kill switch
         ${pkgs.iptables}/bin/iptables -D OUTPUT ! -o ${vpn.name} -m mark ! --mark $(${pkgs.wireguard-tools}/bin/wg show ${vpn.name} fwmark) -m addrtype ! --dst-type LOCAL -j REJECT
         ${pkgs.iptables}/bin/ip6tables -D OUTPUT ! -o ${vpn.name} -m mark ! --mark $(${pkgs.wireguard-tools}/bin/wg show ${vpn.name} fwmark) -m addrtype ! --dst-type LOCAL -j REJECT
         
-        # Restore Tailscale MagicDNS now that the VPN tunnel is closed
-        ${pkgs.tailscale}/bin/tailscale set --accept-dns=true
+        # Restore Tailscale MagicDNS ONLY if it was previously enabled
+        TS_STATE_FILE="/run/wg-quick-${vpn.name}-ts-dns.state"
+        if [ -f "$TS_STATE_FILE" ]; then
+          WAS_ENABLED=$(${pkgs.coreutils}/bin/cat "$TS_STATE_FILE")
+          if [ "$WAS_ENABLED" = "true" ]; then
+            ${pkgs.tailscale}/bin/tailscale set --accept-dns=true
+          fi
+          ${pkgs.coreutils}/bin/rm -f "$TS_STATE_FILE"
+        fi
       '';
     };
   };
