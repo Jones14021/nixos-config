@@ -1,4 +1,4 @@
-{ lib, stdenv, makeWrapper, python3, iproute2, wireguard-tools, curl, inetutils }:
+{ lib, stdenv, makeWrapper, python3, iproute2, wireguard-tools, curl, inetutils, tcpdump }:
 
 stdenv.mkDerivation {
   pname = "dns-leak-test";
@@ -18,6 +18,6 @@ stdenv.mkDerivation {
     
     # Wrap the python script with the required system binaries
     wrapProgram $out/bin/dns-leak-test \
-      --prefix PATH : ${lib.makeBinPath [ iproute2 wireguard-tools curl inetutils ]}
+      --prefix PATH : ${lib.makeBinPath [ iproute2 wireguard-tools curl inetutils tcpdump]}
   '';
 }

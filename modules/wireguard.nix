@@ -37,6 +37,22 @@
 #    (e.g., 192.168.1.45) and transmit it as text inside the encrypted tunnel to 
 #    the destination website.
 #
+# 5. DoH (DNS over HTTPS):
+#    Modern browsers like Chrome, Firefox, and Brave have DoH enabled by default.
+#    DoH was designed to hide your DNS queries from your ISP by wrapping them inside
+#    normal HTTPS traffic (TCP Port 443) and sending them to a third-party provider
+#    like Cloudflare (1.1.1.1) or Google (8.8.8.8).
+#    
+#    The Result: You have effectively given your browsing history to a third-party
+#    data broker (like Google or Cloudflare) instead of keeping it strictly within 
+#    Windscribe's no-log ecosystem. When you run a DNS leak test, it will show Cloudflare's
+#    servers instead of Windscribe's, which is often (mis)diagnosed as a leak.
+#
+#    The Fix: This configuration disables DoH in both Chromium-based browsers and Firefox,
+#    forcing them to use the system's DNS resolver (systemd-resolved) which is
+#    configured to route through the VPN tunnel to Windscribe's DNS servers. This way,
+#    your DNS queries remain private and consistent with the VPN's no-log policy.
+#
 # ==============================================================================
 
 # To start, stop, or restart the VPN, you must use systemd:
@@ -168,4 +184,27 @@ in
       }
     });
   '';
+
+  # Note: This setting applies to Google Chrome and Brave as well if they are
+  # installed via Nixpkgs, as they inherit the Chromium enterprise policies.
+  programs.chromium = {
+    enable = true;
+    extraOpts = {
+      # This completely disables the "Use secure DNS" (DNS over HTTPS, DoH) setting in the browser,
+      # forcing Chromium to use systemd-resolved (and therefore the VPN's DNS).
+      "DnsOverHttpsMode" = "off";
+    };
+  };
+
+  programs.firefox = {
+    enable = true;
+    policies = {
+      # This locks the Firefox DoH setting to "Off" and prevents 
+      # the user from accidentally toggling it back on in the GUI.
+      "DNSOverHTTPS" = {
+        "Enabled" = false;
+        "Locked" = true;
+      };
+    };
+  };
 }
