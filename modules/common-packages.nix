@@ -177,6 +177,10 @@
   virtualisation.docker.enable = true; # additional config in modules/virtualisation.nix
   services.gvfs.enable = true;
 
+  # disable PackageKit to prevent it from interfering with manual package management (e.g. via nix-env or home-manager)
+  #and to avoid unnecessary background processes
+  services.packagekit.enable = false;
+
   # Audio & multimedia
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;
