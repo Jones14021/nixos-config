@@ -13,6 +13,7 @@
     ../modules/home-manager/mounts.nix
     ../modules/home-manager/plasma-manager/shortcuts.nix
     ../modules/home-manager/plasma-manager/widgets.nix
+    ../modules/home-manager/plasma-manager/latte_daybreak.nix
   ];
 
   home.packages = with pkgs; [
