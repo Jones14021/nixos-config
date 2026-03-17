@@ -55,6 +55,8 @@
     binutils
     circup
     picocom
+    thonny
+    nrfconnect
 
     # Python
     python312
@@ -191,12 +193,18 @@
     pulse.enable = true;
   };
 
+  services.udev.packages = with pkgs; [
+    nrf-udev
+    segger-jlink
+  ];
+
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.segger-jlink.acceptLicense = true; # for embedded development
 
   nixpkgs.config.permittedInsecurePackages = [
     "python3.12-ecdsa-0.19.1"  # for embedded development (nrfutil I think)
     "snapmaker-luban-4.15.0"
+    "segger-jlink-qt4-874"
   ];
 
   # https://nixos.wiki/wiki/Fonts
