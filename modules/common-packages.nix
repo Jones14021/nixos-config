@@ -102,6 +102,7 @@
     openfortivpn
     ppp # for openfortivpn
     pandoc
+    zotero
 
     # android stuff
     android-tools
@@ -130,6 +131,7 @@
     self.packages.${pkgs.stdenv.hostPlatform.system}.dns-leak-test
     self.packages.${pkgs.stdenv.hostPlatform.system}.wireguard-extract-secrets
     self.packages.${pkgs.stdenv.hostPlatform.system}.vpn-tray
+    self.packages.${pkgs.stdenv.hostPlatform.system}.latex-vscode
   ];
 
   # overlays to customize certain packages

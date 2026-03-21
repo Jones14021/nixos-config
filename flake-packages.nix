@@ -24,6 +24,7 @@ with (pkgs // erosanix.packages.${system} // erosanix.lib.${system});
     inherit (pkgs.qt6Packages) wrapQtAppsHook qtbase qtwayland;
     inherit python3 systemd;
   };
+  latex-vscode = pkgs.callPackage ./pkgs/latex-vscode { };
   # other packages here e.g.
     #package_name = pkgs.callPackage ./pkgs/someflake {
     #  inherit (anotherneededflake.packages.${system}) mkWindowsApp;
