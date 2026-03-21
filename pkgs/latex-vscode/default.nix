@@ -5,16 +5,29 @@ let
   vscodeWithLatex = pkgs.vscode-with-extensions.override {
     vscodeExtensions = with pkgs.vscode-extensions; [
       james-yu.latex-workshop
+      mhutchie.git-graph
+      gruntfuggly.todo-tree
+      github.copilot-chat
     ];
   };
 
   # 2. Define the runtime dependencies
   runtimeDeps = with pkgs; [
-    tectonic      # The core LaTeX engine
-    biber         # Required if you use biblatex for bibliography management
-    fontconfig    # Required for discovering system fonts (essential for XeTeX/LuaTeX backends)
-    coreutils     # Standard utilities often expected by build scripts
-    tex-fmt       # super fast LaTeX formatter written in Rust
+    tectonic                # The core LaTeX engine
+    biber                   # Required if you use biblatex for bibliography management
+    fontconfig              # Required for discovering system fonts (essential for XeTeX/LuaTeX backends)
+    coreutils               # Standard utilities often expected by build scripts
+    tex-fmt                 # super fast LaTeX formatter written in Rust
+    sqlite                  # Used to check the Zotero database for correctness
+    # Extract utilities from TeX Live (as used by LaTeX Workshop)
+    (texlive.combine {
+      inherit (texlive) 
+        scheme-minimal      # Basic TeX Live installation with just the essential binaries
+        texcount            # For counting words in LaTeX documents, used by some VS Code extensions for word count features
+        checkcites;         # For checking bibliography entries, used by some VS Code extensions to validate citations
+    })
+    ghostscript   # for .eps to .pdf conversion, if needed
+    poppler-utils # for pdftotext, which can be used by some VS Code extensions for PDF previewing and searching
   ];
 
   # 3. Declaratively define the VS Code settings
@@ -75,9 +88,11 @@ let
     # Define an isolated directory for this specific VS Code instance
     VSCODE_DATA_DIR="$HOME/.config/latex-vscode"
     USER_SETTINGS_DIR="$VSCODE_DATA_DIR/User"
+    EXTENSIONS_DIR="$VSCODE_DATA_DIR/extensions"
     
-    # Ensure the directory exists
+    # Ensure the directories exist
     mkdir -p "$USER_SETTINGS_DIR"
+    mkdir -p "$EXTENSIONS_DIR"
     
     # Inject the settings.json.
     # We write it to a file rather than symlinking it from the Nix store. 
@@ -96,6 +111,14 @@ let
     # preventing VS Code from complaining about read-only Nix store paths.
     CHEATSHEET="$VSCODE_DATA_DIR/LaTeX_Studio_Cheatsheet.md"
     cat ${./cheatsheet.md} > "$CHEATSHEET"
+
+    # INSTALL COPILOT DYNAMICALLY (MUTABLE)
+    # We check if it's already installed to avoid delaying the startup every time.
+    if [ ! -d "$EXTENSIONS_DIR/github.copilot-"* ]; then
+        echo "Installing GitHub Copilot..."
+        ${vscodeWithLatex}/bin/code --user-data-dir "$VSCODE_DATA_DIR" --extensions-dir "$EXTENSIONS_DIR" --install-extension GitHub.copilot --force
+        ${vscodeWithLatex}/bin/code --user-data-dir "$VSCODE_DATA_DIR" --extensions-dir "$EXTENSIONS_DIR" --install-extension GitHub.copilot-chat --force
+    fi
     
     # Launch the isolated instance using --user-data-dir.
     # This prevents IPC conflicts with your standard VS Code.
@@ -103,9 +126,9 @@ let
     # If the user launched the app from the KDE menu (0 arguments), open the cheatsheet.
     # Otherwise, pass the arguments (e.g., the clicked .tex file) directly to VS Code.
     if [ $# -eq 0 ]; then
-      exec ${vscodeWithLatex}/bin/code --user-data-dir "$VSCODE_DATA_DIR" "$CHEATSHEET"
+      exec ${vscodeWithLatex}/bin/code --user-data-dir "$VSCODE_DATA_DIR" --extensions-dir "$EXTENSIONS_DIR" "$CHEATSHEET"
     else
-      exec ${vscodeWithLatex}/bin/code --user-data-dir "$VSCODE_DATA_DIR" "$@"
+      exec ${vscodeWithLatex}/bin/code --user-data-dir "$VSCODE_DATA_DIR" --extensions-dir "$EXTENSIONS_DIR" "$@"
     fi
   '';
 
