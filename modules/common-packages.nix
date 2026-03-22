@@ -103,6 +103,7 @@
     ppp # for openfortivpn
     pandoc
     zotero
+    haruna # video player
 
     # android stuff
     android-tools
