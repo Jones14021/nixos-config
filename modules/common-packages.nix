@@ -133,6 +133,7 @@
     self.packages.${pkgs.stdenv.hostPlatform.system}.wireguard-extract-secrets
     self.packages.${pkgs.stdenv.hostPlatform.system}.vpn-tray
     self.packages.${pkgs.stdenv.hostPlatform.system}.latex-vscode
+    self.packages.${pkgs.stdenv.hostPlatform.system}.sm2uploader
   ];
 
   # overlays to customize certain packages
