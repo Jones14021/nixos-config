@@ -104,6 +104,7 @@
     pandoc
     zotero
     haruna # video player
+    freecad
 
     # android stuff
     android-tools
