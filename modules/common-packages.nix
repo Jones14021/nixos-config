@@ -170,13 +170,15 @@
     enable32Bit = true;  # for 32‑bit stuff (Wine etc.)
   };
 
-  # enable installed services and programs  
+  # enable installed services and programs
   networking.networkmanager = {
     enable = true;
     plugins = with pkgs; [
       networkmanager-fortisslvpn
     ];
   };
+  services.resolved.enable = true; # DNS resolver https://wiki.nixos.org/wiki/Systemd/resolved
+
   programs.firefox.enable = true;
   programs.wireshark.enable = true;
   programs.wireshark.usbmon.enable = true;
