@@ -10,9 +10,9 @@
     ../modules/home-manager/onedrive.nix
     ../modules/home-manager/git.nix
     ../modules/home-manager/forticlient-oth.nix
-    #../modules/home-manager/mounts.nix # disable due to stability issues (system freezes)
     ../modules/home-manager/plasma-manager/shortcuts.nix
     ../modules/home-manager/plasma-manager/widgets.nix
+    ../modules/home-manager/dolphin-bookmarks.nix
   ];
 
   home.packages = with pkgs; [

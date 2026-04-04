@@ -8,6 +8,7 @@
     ./nethogs-rootless.nix
     ./virtualisation.nix
     ./wireguard.nix
+    ./mounts.nix
   ];
 
   environment.systemPackages = with pkgs; [
