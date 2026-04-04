@@ -150,6 +150,7 @@
 
   # flatpaks
   # see documentation for declarative-flatpak https://github.com/in-a-dil-emma/declarative-flatpak
+  # see my fork (fixed update logic): https://github.com/Jones14021/declarative-flatpak
   services.flatpak = {
     enable = true;
 

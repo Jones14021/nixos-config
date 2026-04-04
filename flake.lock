@@ -2,16 +2,16 @@
   "nodes": {
     "declarative-flatpak": {
       "locked": {
-        "lastModified": 1759051580,
-        "narHash": "sha256-MjIJINFFc+aokxDJIXawSP2kGNain4AJXTLo719ci5Q=",
-        "owner": "in-a-dil-emma",
+        "lastModified": 1775335082,
+        "narHash": "sha256-7QNsuE9Q8F1/UC7t63ywmbDOONgOdAnZaVGeupwZOf0=",
+        "owner": "Jones14021",
         "repo": "declarative-flatpak",
-        "rev": "2b34c5d4281d0de59f7c25080bc26f76f6b1c63d",
+        "rev": "b648927906ac24a4d73b8e0465d666aea63456f9",
         "type": "github"
       },
       "original": {
-        "owner": "in-a-dil-emma",
-        "ref": "v4.1.0",
+        "owner": "Jones14021",
+        "ref": "modif_v4.1.6",
         "repo": "declarative-flatpak",
         "type": "github"
       }

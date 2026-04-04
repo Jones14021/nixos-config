@@ -14,7 +14,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
-    declarative-flatpak.url = "github:in-a-dil-emma/declarative-flatpak/v4.1.0";
+    declarative-flatpak.url = "github:Jones14021/declarative-flatpak/modif_v4.1.6";
 
     home-manager = {
       url = "github:nix-community/home-manager/release-25.11";
