@@ -30,6 +30,15 @@ let
     poppler-utils # for pdftotext, which can be used by some VS Code extensions for PDF previewing and searching
   ];
 
+  # Zotero Translation Server Docker image (pre-built)
+  translationServerImage = pkgs.dockerTools.pullImage {
+    imageName = "jones14021/translation-server";
+    imageDigest = "sha256:b02486c54ca50a5e42c3b8fac91b5ad2a2c75d088cc8694dfedaf7cfc452fc50";
+    sha256 = "0000000000000000000000000000000000000000000000000000";
+    finalImageName = "jones14021/translation-server";
+    finalImageTag = "latest";
+  };
+
   # 3. Declaratively define the VS Code settings
   settingsJson = builtins.toJSON {
     # --- UI & THEME SETTINGS ---
@@ -111,6 +120,18 @@ let
     # preventing VS Code from complaining about read-only Nix store paths.
     CHEATSHEET="$VSCODE_DATA_DIR/LaTeX_Studio_Cheatsheet.md"
     cat ${./cheatsheet.md} > "$CHEATSHEET"
+
+    # ZOTERO TRANSLATION SERVER (Docker)
+    # Load the image into Docker if not already present, then start the container.
+    if ! ${pkgs.docker}/bin/docker image inspect jones14021/translation-server:latest &>/dev/null; then
+      echo "Loading Zotero Translation Server Docker image..."
+      ${pkgs.docker}/bin/docker load < ${translationServerImage}
+    fi
+    if ! ${pkgs.docker}/bin/docker ps --format '{{.Names}}' | grep -q '^zotero-translation-server$'; then
+      echo "Starting Zotero Translation Server..."
+      ${pkgs.docker}/bin/docker rm -f zotero-translation-server &>/dev/null || true
+      ${pkgs.docker}/bin/docker run -d --name zotero-translation-server -p 1969:1969 --restart unless-stopped jones14021/translation-server:latest
+    fi
 
     # INSTALL COPILOT DYNAMICALLY (MUTABLE)
     # We check if it's already installed to avoid delaying the startup every time.
