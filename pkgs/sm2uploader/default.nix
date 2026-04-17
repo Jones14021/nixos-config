@@ -12,11 +12,11 @@ buildGoModule rec {
     owner = "Jones14021";
     repo = "sm2uploader";
     rev = "67144fee861f2e140dea226941a1f11b9eb0f4ff";
-    hash = "sha256-e7AJcbCCc6zPQSNJzLxxyfKAnRMEWS48hjVw0UGwH1w=";
+    hash = "sha256-/yU2NJb8uwUSF9lGtK7bd5z20SWuC1Cv+g7rUq1Nqa0=";
   };
 
   # Required since the project uses a go.mod file
-  vendorHash = "sha256-knWgm7ZgDD1dTFB74zgxHnc1RVCNJfcP9kqnyw8JUyA=";
+  vendorHash = "sha256-hmxcQBdTegeMegQRUuPJU1bX4THhVQjCr4nA74QL4CE=";
 
   # Replicates the Makefile's build flags
   ldflags = [
