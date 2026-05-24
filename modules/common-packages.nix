@@ -75,7 +75,7 @@
     google-chrome
     snapmaker-luban
     cura-appimage
-    vscode
+    unstablePkgs.vscode
     tailscale
     trayscale
     unstablePkgs.mission-center

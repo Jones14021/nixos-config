@@ -84,13 +84,15 @@
           # Pass all flake package inputs as specialArgs
           specialArgs = {
             inherit self;
-            # ----- Why use legacyPackages? -----
-            # * Most existing NixOS and Home Manager configurations expect pkgs to be a set of packages
-            #   indexed by their names (pkgs.vim, pkgs.firefox, etc.).
-            # * legacyPackages exposes this compatible package set from newer nixpkgs sources (like unstable or overlays).
-            # * Without explicitly using legacyPackages, you might work with the newer packageOverrides
-            #   or other evolving interfaces that can break backwards compatibility.
-            unstablePkgs = nixpkgs-unstable.legacyPackages.x86_64-linux;
+            # Import unstable explicitly instead of reusing legacyPackages, because this host
+            # needs custom nixpkgs config at evaluation time (for example allowUnfree for vscode).
+            # legacyPackages is a convenient pre-instantiated package set and is fine when you
+            # just want the default package set and good backwards compatibility, but it cannot be customized with config here.
+            # The extra import is a small efficiency tradeoff that is worth it for the license policy.
+            unstablePkgs = import nixpkgs-unstable {
+              system = host.system;
+              config.allowUnfree = true;
+            };
             # add more flake packages here if needed
           };
         };
