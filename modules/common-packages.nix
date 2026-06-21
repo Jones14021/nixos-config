@@ -106,6 +106,7 @@
     zotero
     haruna # video player
     freecad
+    diffpdf
 
     # android stuff
     android-tools
