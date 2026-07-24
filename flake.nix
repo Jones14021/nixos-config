@@ -14,8 +14,6 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
-    declarative-flatpak.url = "github:Jones14021/declarative-flatpak/modif_v4.1.6";
-
     home-manager = {
       url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -32,7 +30,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, plasma-manager, erosanix, declarative-flatpak, ... }: let
+  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, plasma-manager, erosanix, ... }: let
 
     allHosts = [
       {
@@ -79,7 +77,6 @@
               ];
               home-manager.users.jonas = import host.home;
             }
-            declarative-flatpak.nixosModules.default
           ];
           # Pass all flake package inputs as specialArgs
           specialArgs = {

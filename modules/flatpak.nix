@@ -1,0 +1,81 @@
+/*
+  Flatpak bootstrap and update behavior
+
+  This module installs the apps in flatpakApps system-wide (/var/lib/flatpak)
+  only when they are missing. On every NixOS rebuild it checks whether each
+  declared app is installed, but it never runs `flatpak update`, never pins an
+  app version after installation, and does not replace an already installed
+  app. Flathub is added only if it has not already been configured.
+
+  Warehouse sees these as System Flatpaks and can update, downgrade, or remove
+  them normally; changing an app in Warehouse will not be undone by a rebuild.
+  If Warehouse removes an app that remains in flatpakApps, the next rebuild
+  installs it again because it is missing. Remove its entry from flatpakApps
+  first if the removal should persist.
+
+  External bundle entries are downloaded only when their appId is missing; the
+  temporary bundle is deleted after installation. Rebuilds do not download an
+  installed external-bundle app again.
+*/
+{ lib, pkgs, ... }:
+let
+  # Each item is either:
+  # - { ref = "APPLICATION_ID//BRANCH"; } for an app from Flathub.
+  # - { appId = "APPLICATION_ID"; bundleUrl = "https://.../app.flatpak"; }
+  #   for an external Flatpak bundle. The app is downloaded and installed only
+  #   when that application ID is not already installed system-wide.
+  flatpakApps = [
+    { ref = "com.github.tchx84.Flatseal//stable"; }
+    { ref = "com.thincast.client//1.1.687"; }
+    {
+      appId = "com.zubersoft.Mobilesheets";
+      bundleUrl = "https://www.zubersoft.download/mobilesheets.flatpak";
+    }
+  ];
+in
+{
+  environment.systemPackages = [ pkgs.warehouse ];
+
+  # Native NixOS Flatpak support; Warehouse manages the system installation afterwards.
+  services.flatpak.enable = true;
+
+  system.activationScripts.installFlatpaks.text = let
+    flatpak = lib.getExe pkgs.flatpak;
+    curl = lib.getExe pkgs.curl;
+  in ''
+    set -eu
+
+    if ! ${flatpak} remote-list --system --columns=name | ${pkgs.gnugrep}/bin/grep --fixed-strings --quiet --line-regexp flathub; then
+      ${flatpak} remote-add --system --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+    fi
+
+    install_flathub_if_missing() {
+      app_ref="$1"
+
+      if ! ${flatpak} info --system "$app_ref" >/dev/null 2>&1; then
+        ${flatpak} install --system --noninteractive flathub "$app_ref"
+      fi
+    }
+
+    install_bundle_if_missing() {
+      app_id="$1"
+      bundle_url="$2"
+      bundle_path="$(mktemp --tmpdir=/var/lib/flatpak --suffix=.flatpak)"
+
+      if ! ${flatpak} info --system --app "$app_id" >/dev/null 2>&1; then
+        trap 'rm --force "$bundle_path"' EXIT
+        ${curl} --fail --location --output "$bundle_path" "$bundle_url"
+        ${flatpak} install --system --noninteractive "$bundle_path"
+        rm --force "$bundle_path"
+        trap - EXIT
+      fi
+    }
+
+    ${lib.concatMapStringsSep "\n" (app:
+      if app ? ref then
+        "install_flathub_if_missing ${lib.escapeShellArg app.ref}"
+      else
+        "install_bundle_if_missing ${lib.escapeShellArg app.appId} ${lib.escapeShellArg app.bundleUrl}"
+    ) flatpakApps}
+  '';
+}

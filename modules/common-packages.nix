@@ -1,9 +1,9 @@
 { pkgs, unstablePkgs, nixosConfEditor, self, ... }:
 {
   imports = [
+    ./flatpak.nix
     ./kde-plasma-6.nix
     ./tailscale.nix
-    ./mobilesheets-companion.nix
     ./snapmaker-luban.nix
     ./nethogs-rootless.nix
     ./virtualisation.nix
@@ -117,9 +117,6 @@
     p3x-onenote
     unstablePkgs.winboat
 
-    # flatpak related stuff
-    warehouse
-
     # KDE stuff
     kdePackages.ksshaskpass
     kdePackages.kconfig # for kwriteconfig6
@@ -150,23 +147,6 @@
     })
   # You can add more overlays here to customize other packages
   ];
-
-  # flatpaks
-  # see documentation for declarative-flatpak https://github.com/in-a-dil-emma/declarative-flatpak
-  # see my fork (fixed update logic): https://github.com/Jones14021/declarative-flatpak
-  services.flatpak = {
-    enable = true;
-
-    remotes = {
-      "flathub" = "https://dl.flathub.org/repo/flathub.flatpakrepo";      
-    };
-
-    packages = [
-      "flathub:app/com.github.tchx84.Flatseal//stable"
-      "flathub:app/com.thincast.client//1.1.687" # as a Windows-like RDP client
-    ];
-  };
-  # see also imported module modules/mobilesheets-companion.nix
 
   # common hardware support
   hardware.graphics = { # for GPU support (MESA stack, OpenGL, Vulkan, etc.), needed for e.g. Upscaler
