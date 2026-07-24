@@ -196,6 +196,7 @@
     "python3.12-ecdsa-0.19.1"  # for embedded development (nrfutil I think)
     "snapmaker-luban-4.15.0"
     "segger-jlink-qt4-874"
+    "docker-28.5.2"
   ];
 
   # https://nixos.wiki/wiki/Fonts
