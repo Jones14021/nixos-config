@@ -88,7 +88,12 @@
             # The extra import is a small efficiency tradeoff that is worth it for the license policy.
             unstablePkgs = import nixpkgs-unstable {
               system = host.system;
-              config.allowUnfree = true;
+              config = {
+                allowUnfree = true;
+                # common-packages installs unstablePkgs.vscode, which currently
+                # depends on the EOL Electron 40 runtime.
+                permittedInsecurePackages = [ "electron-40.10.5" ];
+              };
             };
             # add more flake packages here if needed
           };

@@ -5,7 +5,15 @@
 { nixpkgs, erosanix }:
 system:
 let
-  pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
+  pkgs = import nixpkgs {
+    inherit system;
+    config = {
+      allowUnfree = true;
+      # self.packages.latex-vscode uses pkgs.vscode-with-extensions, which
+      # currently depends on the EOL Electron 40 runtime.
+      permittedInsecurePackages = [ "electron-40.10.5" ];
+    };
+  };
 in
 with (pkgs // erosanix.packages.${system} // erosanix.lib.${system});
 {
