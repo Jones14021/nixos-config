@@ -2,10 +2,13 @@
   Flatpak bootstrap and update behavior
 
   This module installs the apps in flatpakApps system-wide (/var/lib/flatpak)
-  only when they are missing. On every NixOS rebuild it checks whether each
-  declared app is installed, but it never runs `flatpak update`, never pins an
-  app version after installation, and does not replace an already installed
-  app. Flathub is added only if it has not already been configured.
+  only when they are missing. Installation is done by a delayed one-shot
+  systemd service (`flatpak-bootstrap.service`) that is triggered once per
+  `nixos-rebuild switch` with `--no-block`, so DNS or network failures cannot
+  abort activation. The service never runs
+  `flatpak update`, never pins an app version after installation, and does not
+  replace an already installed app. Flathub is added only if it has not already
+  been configured.
 
   Warehouse sees these as System Flatpaks and can update, downgrade, or remove
   them normally; changing an app in Warehouse will not be undone by a rebuild.
@@ -32,14 +35,8 @@ let
       bundleUrl = "https://www.zubersoft.download/mobilesheets.flatpak";
     }
   ];
-in
-{
-  environment.systemPackages = [ pkgs.warehouse ];
 
-  # Native NixOS Flatpak support; Warehouse manages the system installation afterwards.
-  services.flatpak.enable = true;
-
-  system.activationScripts.installFlatpaks.text = let
+  flatpakBootstrapScript = let
     flatpak = lib.getExe pkgs.flatpak;
     curl = lib.getExe pkgs.curl;
   in ''
@@ -77,5 +74,27 @@ in
       else
         "install_bundle_if_missing ${lib.escapeShellArg app.appId} ${lib.escapeShellArg app.bundleUrl}"
     ) flatpakApps}
+  '';
+in
+{
+  environment.systemPackages = [ pkgs.warehouse ];
+
+  # Native NixOS Flatpak support; Warehouse manages the system installation afterwards.
+  services.flatpak.enable = true;
+
+  systemd.services.flatpak-bootstrap = {
+    description = "Bootstrap configured Flatpaks when network is available";
+    after = [ "network-online.target" "nss-lookup.target" ];
+    wants = [ "network-online.target" "nss-lookup.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+    };
+    script = flatpakBootstrapScript;
+  };
+
+  system.activationScripts.triggerFlatpakBootstrap.text = ''
+    if command -v systemctl >/dev/null 2>&1; then
+      systemctl --no-block start flatpak-bootstrap.service || true
+    fi
   '';
 }
