@@ -26,7 +26,7 @@ let
   #   when that application ID is not already installed system-wide.
   flatpakApps = [
     { ref = "com.github.tchx84.Flatseal//stable"; }
-    { ref = "com.thincast.client//1.1.687"; }
+    { ref = "com.thincast.client//stable"; }
     {
       appId = "com.zubersoft.Mobilesheets";
       bundleUrl = "https://www.zubersoft.download/mobilesheets.flatpak";
