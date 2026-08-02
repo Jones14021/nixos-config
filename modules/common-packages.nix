@@ -9,6 +9,7 @@
     ./virtualisation.nix
     ./wireguard.nix
     ./mounts.nix
+    ./freecad.nix
   ];
 
   environment.systemPackages = with pkgs; [
@@ -107,7 +108,6 @@
     pandoc
     zotero
     haruna # video player
-    freecad
     diffpdf
 
     # android stuff
