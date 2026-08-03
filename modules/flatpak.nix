@@ -2,10 +2,10 @@
   Flatpak bootstrap and update behavior
 
   This module installs the apps in flatpakApps system-wide (/var/lib/flatpak)
-  only when they are missing. Installation is done by a delayed one-shot
-  systemd service (`flatpak-bootstrap.service`) that is triggered once per
-  `nixos-rebuild switch` with `--no-block`, so DNS or network failures cannot
-  abort activation. The service never runs
+  only when they are missing. Installation is done by a one-shot systemd
+  service (`flatpak-bootstrap.service`) that is triggered once per
+  `nixos-rebuild switch`; rebuild waits for its result and streams its journal
+  output, while DNS or network failures do not abort activation. The service never runs
   `flatpak update`, never pins an app version after installation, and does not
   replace an already installed app. Flathub is added only if it has not already
   been configured.
@@ -22,6 +22,9 @@
 */
 { lib, pkgs, ... }:
 let
+  systemctl = "${pkgs.systemd}/bin/systemctl";
+  journalctl = "${pkgs.systemd}/bin/journalctl";
+
   # Each item is either:
   # - { ref = "APPLICATION_ID//BRANCH"; } for an app from Flathub.
   # - { appId = "APPLICATION_ID"; bundleUrl = "https://.../app.flatpak"; }
@@ -94,8 +97,26 @@ in
   };
 
   system.activationScripts.triggerFlatpakBootstrap.text = ''
-    if command -v systemctl >/dev/null 2>&1; then
-      systemctl --no-block start flatpak-bootstrap.service || true
+    # NixOS activation uses a minimal PATH without systemctl. It also runs
+    # before switch-to-configuration reloads systemd.
+    if ! ${systemctl} daemon-reload; then
+      echo "flatpak-bootstrap: failed to reload systemd" >&2
+    else
+      ${journalctl} --unit=flatpak-bootstrap.service --follow --lines=0 --no-pager --output=cat &
+      journal_pid=$!
+
+      if ${systemctl} start flatpak-bootstrap.service; then
+        bootstrap_status=0
+      else
+        bootstrap_status=$?
+      fi
+
+      kill "$journal_pid" 2>/dev/null || true
+      wait "$journal_pid" 2>/dev/null || true
+
+      if [ "$bootstrap_status" -ne 0 ]; then
+        echo "flatpak-bootstrap: service failed (exit $bootstrap_status)" >&2
+      fi
     fi
   '';
 }
