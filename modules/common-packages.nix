@@ -42,6 +42,8 @@
     samba
     tree
     wireguard-tools # 'wg' command
+    bubblewrap # often a prerequisite for AI agent sandboxing
+    socat # often a prerequisite for AI agent sandboxing
     
     # development
     nrfutil
