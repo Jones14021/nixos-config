@@ -32,7 +32,6 @@ let
   #   when that application ID is not already installed system-wide.
   flatpakApps = [
     { ref = "com.github.tchx84.Flatseal//stable"; }
-    { ref = "com.github.johnfactotum.Foliate//stable"; }
     { ref = "com.thincast.client//stable"; }
     {
       appId = "com.zubersoft.Mobilesheets";

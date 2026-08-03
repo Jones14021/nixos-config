@@ -91,6 +91,7 @@
     pdftricks
     pdfgrep
     calibre
+    foliate
     pinta
     audacity
     simple-scan
@@ -147,6 +148,11 @@
       google-chrome = prev.google-chrome.override {
         commandLineArgs = "--disable-gpu";
       };
+      foliate = prev.foliate.overrideAttrs (old: {
+        postFixup = (old.postFixup or "") + ''
+          wrapProgram "$out/bin/foliate" --set GDK_BACKEND x11
+        '';
+      });
     })
   # You can add more overlays here to customize other packages
   ];
