@@ -88,7 +88,6 @@
     pdfarranger
     pdftricks
     pdfgrep
-    foliate
     calibre
     pinta
     audacity
