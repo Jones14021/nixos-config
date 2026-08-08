@@ -44,6 +44,9 @@
     wireguard-tools # 'wg' command
     bubblewrap # often a prerequisite for AI agent sandboxing
     socat # often a prerequisite for AI agent sandboxing
+    ripgrep # ripgrep, for searching text in files (used by AI agents)
+    ripgrep-all # ripgrep-all, for searching text in files (including PDFs, EPUBs, ...) (used by AI agents)
+    jdk25
     
     # development
     nrfutil
