@@ -101,7 +101,7 @@ in
     if ! ${systemctl} daemon-reload; then
       echo "flatpak-bootstrap: failed to reload systemd" >&2
     else
-      echo "flatpak-bootstrap: monitoring service: ...
+      echo "flatpak-bootstrap: monitoring service..."
       ${journalctl} --unit=flatpak-bootstrap.service --follow --lines=0 --no-pager --output=cat &
       journal_pid=$!
 
