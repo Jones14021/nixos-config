@@ -51,7 +51,7 @@
     ];
 
     # get the function to get the per-system attrset for the contained packages
-    mkPackages = import ./flake-packages.nix { inherit nixpkgs erosanix; };
+    mkPackages = import ./flake-packages.nix { inherit nixpkgs nixpkgs-unstable erosanix; };
 
   in {
 

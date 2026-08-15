@@ -10,6 +10,7 @@
     ./wireguard.nix
     ./mounts.nix
     ./freecad.nix
+    ./vscode.nix
   ];
 
   environment.systemPackages = with pkgs; [
@@ -81,9 +82,6 @@
     google-chrome
     snapmaker-luban
     cura-appimage
-    (unstablePkgs.vscode.override {
-      commandLineArgs = "--disable-gpu --disable-gpu-sandbox";
-    })
     tailscale
     trayscale
     unstablePkgs.mission-center

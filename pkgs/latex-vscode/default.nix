@@ -1,9 +1,9 @@
-{ pkgs }:
+{ pkgs, unstablePkgs }:
 
 let
   # 1. Define the isolated VS Code environment with the LaTeX Workshop extension.
-  vscodeWithLatex = pkgs.vscode-with-extensions.override {
-    vscodeExtensions = with pkgs.vscode-extensions; [
+  vscodeWithLatex = unstablePkgs.vscode-with-extensions.override {
+    vscodeExtensions = with unstablePkgs.vscode-extensions; [
       james-yu.latex-workshop
       mhutchie.git-graph
       gruntfuggly.todo-tree

@@ -2,7 +2,7 @@
 # it can be imported and used in outputs
 # supply the "system" as the only argument
 
-{ nixpkgs, erosanix }:
+{ nixpkgs, nixpkgs-unstable, erosanix }:
 system:
 let
   pkgs = import nixpkgs {
@@ -11,6 +11,13 @@ let
       allowUnfree = true;
       # self.packages.latex-vscode uses pkgs.vscode-with-extensions, which
       # currently depends on the EOL Electron 40 runtime.
+      permittedInsecurePackages = [ "electron-40.10.5" ];
+    };
+  };
+  unstablePkgs = import nixpkgs-unstable {
+    inherit system;
+    config = {
+      allowUnfree = true;
       permittedInsecurePackages = [ "electron-40.10.5" ];
     };
   };
@@ -32,7 +39,7 @@ with (pkgs // erosanix.packages.${system} // erosanix.lib.${system});
     inherit (pkgs.qt6Packages) wrapQtAppsHook qtbase qtwayland;
     inherit python3 systemd;
   };
-  latex-vscode = pkgs.callPackage ./pkgs/latex-vscode { };
+  latex-vscode = pkgs.callPackage ./pkgs/latex-vscode { inherit unstablePkgs; };
   sm2uploader = pkgs.callPackage ./pkgs/sm2uploader { };
   vidname = pkgs.callPackage ./pkgs/vidname { };
   pdf2md = pkgs.callPackage ./pkgs/pdf2md {
