@@ -26,7 +26,7 @@ with (pkgs // erosanix.packages.${system} // erosanix.lib.${system});
 {
   fusion360 = pkgs.callPackage ./pkgs/fusion360 {
     inherit mkWindowsApp makeDesktopIcon copyDesktopIcons;
-    wine = wineWowPackages.base;
+    wine = wineWow64Packages.base;
   };
   png2svg = pkgs.callPackage ./pkgs/png2svg { };
   text2img = pkgs.callPackage ./pkgs/text2img { };

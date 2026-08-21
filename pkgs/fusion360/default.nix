@@ -55,7 +55,7 @@ let
   runtimeDeps = [
     wine winetricks cabextract p7zip unzip curl wget samba
     fontconfig freetype openssl alsa-lib libpulseaudio libGL vulkan-loader
-    xorg.xrandr
+    xrandr
   ];
 in
 mkWindowsApp rec {
