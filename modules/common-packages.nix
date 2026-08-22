@@ -118,7 +118,6 @@
     scrcpy
 
     # Windows apps
-    self.packages.${pkgs.stdenv.hostPlatform.system}.fusion360
     p3x-onenote
     unstablePkgs.winboat
 
@@ -154,6 +153,12 @@
         postFixup = (old.postFixup or "") + ''
           wrapProgram "$out/bin/foliate" --set GDK_BACKEND x11
         '';
+      });
+      # https://github.com/NixOS/nixpkgs/issues/499166
+      python312 = prev.python312.overrideAttrs (old: {
+        passthru = old.passthru // {
+          doc = prev.emptyDirectory;
+        };
       });
     })
   # You can add more overlays here to customize other packages

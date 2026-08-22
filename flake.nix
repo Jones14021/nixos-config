@@ -27,6 +27,7 @@
 
     erosanix = {
       url = "github:emmanuelrosa/erosanix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
