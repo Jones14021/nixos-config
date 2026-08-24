@@ -34,7 +34,7 @@ let
     { ref = "com.github.tchx84.Flatseal//stable"; }
     { ref = "com.thincast.client//stable"; }
     {
-      appId = "com.zubersoft.Mobilesheets";
+      appId = "com.zubersoft.mobileSheetsCompanion";
       bundleUrl = "https://www.zubersoft.download/mobilesheets.flatpak";
     }
   ];
@@ -62,7 +62,7 @@ let
       bundle_url="$2"
       bundle_path="$(mktemp --tmpdir=/var/lib/flatpak --suffix=.flatpak)"
 
-      if ! ${flatpak} info --system --app "$app_id" >/dev/null 2>&1; then
+      if ! ${flatpak} info --system "$app_id" >/dev/null 2>&1; then
         trap 'rm --force "$bundle_path"' EXIT
         ${curl} --fail --location --output "$bundle_path" "$bundle_url"
         ${flatpak} install --system --noninteractive "$bundle_path"

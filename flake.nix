@@ -73,6 +73,7 @@
             {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
+              home-manager.backupFileExtension = "hm-backup";
               home-manager.sharedModules = [
                 plasma-manager.homeModules.plasma-manager
               ];
