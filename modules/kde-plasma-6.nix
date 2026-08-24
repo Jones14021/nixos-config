@@ -6,14 +6,11 @@
   # X11 compatibility and to make an X11 Plasma session available in SDDM.
   services.xserver.enable = true;
 
-  # Enable SDDM, KDE Plasma's usual display/login manager.
-  services.displayManager.sddm.enable = true;
+  # Enable Plasma Login Manager, KDE Plasma's display/login manager.
+  services.displayManager.plasma-login-manager.enable = true;
 
   # Enable KDE Plasma 6.
   services.desktopManager.plasma6.enable = true;
-
-  # Turn Num Lock on automatically at the SDDM login screen.
-  services.displayManager.sddm.autoNumlock = true;
 
   # Configure the graphical-session keyboard layout.
   # "de" selects the German keyboard layout; empty variant means default DE layout.
