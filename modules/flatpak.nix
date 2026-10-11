@@ -1,6 +1,6 @@
 /*
   Flatpak bootstrap and update behavior
-
+ 
   This module installs the apps in flatpakApps system-wide (/var/lib/flatpak)
   only when they are missing. Installation is done by a one-shot systemd
   service (`flatpak-bootstrap.service`) that is triggered once per
@@ -33,6 +33,10 @@ let
   flatpakApps = [
     { ref = "com.github.tchx84.Flatseal//stable"; }
     { ref = "com.thincast.client//stable"; }
+    {
+      appId = "ai.storyteller.solvecraft";
+      bundleUrl = "https://github.com/bherbruck/solvecraft/releases/download/v0.2.0/solvecraft-0.2.0-linux-x86_64.flatpak";
+    }
     {
       appId = "com.zubersoft.mobileSheetsCompanion";
       bundleUrl = "https://www.zubersoft.download/mobilesheets.flatpak";
