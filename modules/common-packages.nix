@@ -139,6 +139,7 @@
     self.packages.${pkgs.stdenv.hostPlatform.system}.latex-vscode
     self.packages.${pkgs.stdenv.hostPlatform.system}.sm2uploader
     self.packages.${pkgs.stdenv.hostPlatform.system}.vidname
+    self.packages.${pkgs.stdenv.hostPlatform.system}.iper3-server-isolated-macvlan
   ];
 
   # overlays to customize certain packages

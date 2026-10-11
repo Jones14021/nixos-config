@@ -38,6 +38,7 @@ with (pkgs // erosanix.packages.${system} // erosanix.lib.${system});
   latex-vscode = pkgs.callPackage ./pkgs/latex-vscode { inherit unstablePkgs; };
   sm2uploader = pkgs.callPackage ./pkgs/sm2uploader { };
   vidname = pkgs.callPackage ./pkgs/vidname { };
+  iper3-server-isolated-macvlan = pkgs.callPackage ./pkgs/iper3-server-isolated-macvlan { };
   # other packages here e.g.
     #package_name = pkgs.callPackage ./pkgs/someflake {
     #  inherit (anotherneededflake.packages.${system}) mkWindowsApp;
