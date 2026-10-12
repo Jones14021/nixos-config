@@ -34,8 +34,8 @@ let
     { ref = "com.github.tchx84.Flatseal//stable"; }
     { ref = "com.thincast.client//stable"; }
     {
-      appId = "ai.storyteller.solvecraft";
-      bundleUrl = "https://github.com/bherbruck/solvecraft/releases/download/v0.2.0/solvecraft-0.2.0-linux-x86_64.flatpak";
+      appId = "ai.storyteller.solidcraft";
+      bundleUrl = "https://github.com/bherbruck/solidcraft/releases/download/v0.4.0/solvecraft-0.4.0-linux-x86_64.flatpak";
     }
     {
       appId = "com.zubersoft.mobileSheetsCompanion";
