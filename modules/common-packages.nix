@@ -48,6 +48,28 @@
     ripgrep # ripgrep, for searching text in files (used by AI agents)
     ripgrep-all # ripgrep-all, for searching text in files (including PDFs, EPUBs, ...) (used by AI agents)
     jdk25
+
+    # Filesystem tools for GParted
+    bcachefs-tools # bcachefs
+    btrfs-progs    # Btrfs
+    exfatprogs     # exFAT
+    e2fsprogs      # ext2 / ext3 / ext4
+    f2fs-tools     # F2FS
+    dosfstools     # FAT16 / FAT32
+    mtools        # FAT labels and UUIDs
+    hfsutils      # HFS
+    hfsprogs      # HFS+
+    jfsutils      # JFS
+    lvm2          # LVM physical volumes
+    util-linux    # Minix, Linux swap, blkid and swaplabel
+    nilfs-utils   # NILFS2
+    ntfs3g        # NTFS — Nixpkgs name for ntfs-3g
+    udftools      # UDF
+    xfsprogs      # XFS
+    xfsdump       # XFS copying via xfsdump / xfsrestore
+
+    # Encryption support in GParted
+    cryptsetup    # LUKS
     
     # development
     nrfutil
