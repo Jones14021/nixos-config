@@ -48,6 +48,7 @@
     ripgrep # ripgrep, for searching text in files (used by AI agents)
     ripgrep-all # ripgrep-all, for searching text in files (including PDFs, EPUBs, ...) (used by AI agents)
     jdk25
+    p7zip
 
     # Filesystem tools for GParted
     bcachefs-tools # bcachefs
