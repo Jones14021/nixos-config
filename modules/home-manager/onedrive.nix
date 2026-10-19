@@ -10,7 +10,9 @@
 
 {
   home.activation.createOnedriveDir = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    mkdir -p "$HOME/OneDrive"
+    if ! ${pkgs.util-linux}/bin/findmnt --target "$HOME/OneDrive" >/dev/null 2>&1; then
+      mkdir -p "$HOME/OneDrive"
+    fi
   '';
 
   systemd.user.services.onedrive = {
@@ -18,8 +20,8 @@
       Description = "Rclone mount for OneDrive";
       After = [ "network-online.target" ];
       Wants = [ "network-online.target" ];
-      StartLimitBurst = 3;
-      StartLimitIntervalSec = 10;
+      StartLimitBurst = 10;
+      StartLimitIntervalSec = 300;
     };
     Service = {
       Type = "simple";
@@ -28,7 +30,10 @@
       #   This means changes made externally or in another client may not be reflected locally for up to 5 minutes
       # * Enables write caching in the Virtual File System (VFS) layer. Files you write are cached locally until
       #   fully written, then uploaded immediately once closed.
-      ExecStartPre = "${pkgs.stdenv.shell} -c '${pkgs.rclone}/bin/rclone listremotes | grep -q \'^onedrive:$\''";
+      ExecStartPre = [
+        "-${pkgs.fuse3}/bin/fusermount3 -uz %h/OneDrive"
+        "${pkgs.stdenv.shell} -c '${pkgs.rclone}/bin/rclone listremotes | grep -q \'^onedrive:$\''"
+      ];
       ExecStart = ''
         ${pkgs.rclone}/bin/rclone mount onedrive: %h/OneDrive \
           --config=%h/.config/rclone/rclone.conf \
@@ -37,7 +42,9 @@
           --poll-interval 30s \
           --umask 022 \
       '';
+      ExecStopPost = "-${pkgs.fuse3}/bin/fusermount3 -uz %h/OneDrive";
       Restart = "on-failure";
+      RestartSec = "30s";
     };
     Install = {
       WantedBy = [ "default.target" ];
