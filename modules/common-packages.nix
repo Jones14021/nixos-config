@@ -237,6 +237,7 @@
     "segger-jlink-qt4-874"
     "docker-28.5.2"
     "electron-40.10.5" # required by unstablePkgs.vscode
+    "NetworkManager-fortisslvpn-gnome-1.4.0"
   ];
 
   # https://nixos.wiki/wiki/Fonts
