@@ -30,12 +30,19 @@ let
   # - { appId = "APPLICATION_ID"; bundleUrl = "https://.../app.flatpak"; }
   #   for an external Flatpak bundle. The app is downloaded and installed only
   #   when that application ID is not already installed system-wide.
+  # Both forms may add permissions = [ "--FLATPAK-OVERRIDE-OPTION" ... ]; to
+  # declare app-specific `flatpak override --system` options. For example,
+  # permissions = [ "--filesystem=home" "--share=network" ];
   flatpakApps = [
     { ref = "com.github.tchx84.Flatseal//stable"; }
     { ref = "com.thincast.client//stable"; }
     {
       appId = "ai.storyteller.solidcraft";
       bundleUrl = "https://github.com/tangency-labs/solidcraft/releases/download/v0.16.2/solidcraft-linux-x86_64.flatpak";
+      permissions = [
+        "--filesystem=host"
+        "--talk-name=org.freedesktop.Flatpak"
+      ];
     }
     {
       appId = "com.zubersoft.mobileSheetsCompanion";
@@ -75,11 +82,25 @@ let
       fi
     }
 
+    apply_permission_override() {
+      app_id="$1"
+      shift
+      ${flatpak} override --system "$@" "$app_id"
+    }
+
     ${lib.concatMapStringsSep "\n" (app:
       if app ? ref then
         "install_flathub_if_missing ${lib.escapeShellArg app.ref}"
       else
         "install_bundle_if_missing ${lib.escapeShellArg app.appId} ${lib.escapeShellArg app.bundleUrl}"
+    ) flatpakApps}
+
+    ${lib.concatMapStringsSep "\n" (app:
+      let
+        appId = app.appId or (builtins.head (lib.splitString "//" app.ref));
+      in
+        lib.optionalString (app ? permissions)
+          "apply_permission_override ${lib.escapeShellArg appId} ${lib.escapeShellArgs app.permissions}"
     ) flatpakApps}
   '';
 in

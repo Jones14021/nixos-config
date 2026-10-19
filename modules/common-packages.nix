@@ -19,6 +19,7 @@
     git
     unstablePkgs.vscode
     unstablePkgs.uv
+    unstablePkgs.opencode
     rclone
     fuse
     wget
