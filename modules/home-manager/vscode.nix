@@ -1,12 +1,14 @@
 { unstablePkgs, ... }:
 
-let
-  vscode = unstablePkgs.vscode.override {
-    commandLineArgs = "--disable-gpu --disable-gpu-sandbox";
-  };
-  vscodeWithExtensions = unstablePkgs.vscode-with-extensions.override {
-    inherit vscode;
-    vscodeExtensions = with unstablePkgs.vscode-extensions; [
+{
+  # Each declarative extension is linked into ~/.vscode/extensions, leaving
+  # the same directory available for normal Marketplace installs.
+  programs.vscode = {
+    enable = true;
+    package = unstablePkgs.vscode.override {
+      commandLineArgs = "--disable-gpu --disable-gpu-sandbox";
+    };
+    profiles.default.extensions = with unstablePkgs.vscode-extensions; [
       mhutchie.git-graph
       ms-python.python
       ms-python.vscode-pylance
@@ -25,7 +27,4 @@ let
       vscjava.vscode-java-pack
     ];
   };
-in
-{
-  environment.systemPackages = [ vscodeWithExtensions ];
 }

@@ -10,7 +10,6 @@
     ./wireguard.nix
     ./mounts.nix
     ./freecad.nix
-    ./vscode.nix
   ];
 
   environment.systemPackages = with pkgs; [
@@ -18,6 +17,7 @@
     vim
     nano
     git
+    unstablePkgs.vscode
     unstablePkgs.uv
     rclone
     fuse

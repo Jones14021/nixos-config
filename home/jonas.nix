@@ -13,6 +13,7 @@
     ../modules/home-manager/plasma-manager/shortcuts.nix
     ../modules/home-manager/plasma-manager/widgets.nix
     ../modules/home-manager/dolphin-bookmarks.nix
+    ../modules/home-manager/vscode.nix
   ];
 
   home.packages = with pkgs; [

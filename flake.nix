@@ -64,7 +64,17 @@
     nixosConfigurations = builtins.listToAttrs (
       map (host: {
         name = host.name;
-        value = nixpkgs.lib.nixosSystem {
+        value = let
+          unstablePkgs = import nixpkgs-unstable {
+            system = host.system;
+            config = {
+              allowUnfree = true;
+              # common-packages installs unstablePkgs.vscode, which currently
+              # depends on the EOL Electron 40 runtime.
+              permittedInsecurePackages = [ "electron-40.10.5" ];
+            };
+          };
+        in nixpkgs.lib.nixosSystem {
           system = host.system;
           modules = [
             host.hardwareConfig
@@ -74,6 +84,7 @@
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.backupFileExtension = "hm-backup";
+              home-manager.extraSpecialArgs = { inherit unstablePkgs; };
               home-manager.sharedModules = [
                 plasma-manager.homeModules.plasma-manager
               ];
@@ -82,21 +93,7 @@
           ];
           # Pass all flake package inputs as specialArgs
           specialArgs = {
-            inherit self;
-            # Import unstable explicitly instead of reusing legacyPackages, because this host
-            # needs custom nixpkgs config at evaluation time (for example allowUnfree for vscode).
-            # legacyPackages is a convenient pre-instantiated package set and is fine when you
-            # just want the default package set and good backwards compatibility, but it cannot be customized with config here.
-            # The extra import is a small efficiency tradeoff that is worth it for the license policy.
-            unstablePkgs = import nixpkgs-unstable {
-              system = host.system;
-              config = {
-                allowUnfree = true;
-                # common-packages installs unstablePkgs.vscode, which currently
-                # depends on the EOL Electron 40 runtime.
-                permittedInsecurePackages = [ "electron-40.10.5" ];
-              };
-            };
+            inherit self unstablePkgs;
             # add more flake packages here if needed
           };
         };
