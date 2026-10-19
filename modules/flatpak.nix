@@ -42,6 +42,15 @@ let
       permissions = [
         "--filesystem=host"
         "--talk-name=org.freedesktop.Flatpak"
+        "--share=network"
+        # SolidCraft detects ACP agents with `opencode --version` on its own
+        # PATH. These mounts make the NixOS wrapper, its store target, and the
+        # OpenCode configuration and authentication state available there.
+        "--filesystem=/run/current-system/sw/bin:ro"
+        "--filesystem=/nix/store:ro"
+        "--filesystem=~/.config/opencode:ro"
+        "--filesystem=~/.local/share/opencode"
+        "--env=PATH=/run/current-system/sw/bin:/app/bin:/usr/bin"
       ];
     }
     {
