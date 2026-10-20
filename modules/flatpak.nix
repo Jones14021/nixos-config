@@ -74,27 +74,90 @@ let
   # Flatpaks installed and updated outside Nix (e.g. user-installed by the
   # ArtCraft launcher). Only their command wrappers are declared here; a missing
   # app does not break the rebuild, its wrapper just reports it as not installed.
+  # permissions = [ ... ] are applied as `flatpak override --user` options.
+  # artcraftControlKey = { variable = "..."; commands = [ ... ]; } makes those
+  # wrappers hand the running GUI's control key to the CLI (ArtCraft apps only,
+  # needed for `mcp --connect`).
+  #
+  # ArtCraft control ports: the GUI opens its control channel on
+  # <APP>_CONTROL_PORT, which must match the MCP entry in
+  # modules/home-manager/opencode.nix. Network access is needed because the
+  # control channel is loopback TCP.
   unmanagedFlatpakApps = [
-    { appId = "ai.storyteller.wordcraft"; commands = [ "wordcraft" "wordcraft-cli" ]; }
-    { appId = "ai.storyteller.cadcraft"; commands = [ "cadcraft" "cadcraft-cli" ]; }
-    { appId = "ai.storyteller.deckcraft"; commands = [ "deckcraft" "deckcraft-cli" ]; }
-    { appId = "ai.storyteller.gridcraft"; commands = [ "gridcraft" "gridcraft-cli" ]; }
+    {
+      appId = "ai.storyteller.wordcraft";
+      commands = [ "wordcraft" "wordcraft-cli" ];
+      permissions = [ "--share=network" "--env=WORDCRAFT_CONTROL_PORT=7981" ];
+      artcraftControlKey = { variable = "WORDCRAFT_CONTROL_KEY"; commands = [ "wordcraft-cli" ]; };
+    }
+    {
+      appId = "ai.storyteller.cadcraft";
+      commands = [ "cadcraft" "cadcraft-cli" ];
+      permissions = [ "--share=network" "--env=CADCRAFT_CONTROL_PORT=7982" ];
+    }
+    {
+      appId = "ai.storyteller.deckcraft";
+      commands = [ "deckcraft" "deckcraft-cli" ];
+      permissions = [ "--share=network" "--env=DECKCRAFT_CONTROL_PORT=7983" ];
+    }
+    {
+      appId = "ai.storyteller.gridcraft";
+      commands = [ "gridcraft" "gridcraft-cli" ];
+      permissions = [ "--share=network" "--env=GRIDCRAFT_CONTROL_PORT=7984" ];
+    }
+    # PDFCraft's control channel is a file, and its MCP server cannot attach to the GUI.
     { appId = "ai.storyteller.pdfcraft"; commands = [ "pdfcraft" "pdfcraft-cli" ]; }
-    { appId = "ai.storyteller.photocraft"; commands = [ "photocraft" "photocraft-cli" ]; }
-    { appId = "ai.storyteller.soundcraft"; commands = [ "soundcraft" "soundcraft-cli" ]; }
+    {
+      appId = "ai.storyteller.photocraft";
+      commands = [ "photocraft" "photocraft-cli" ];
+      permissions = [
+        "--share=network"
+        "--env=PHOTOCRAFT_CONTROL_PORT=7985"
+        # GUI and CLI share this token; the GUI creates it on first start.
+        "--env=PHOTOCRAFT_CONTROL_TOKEN_FILE=/home/jonas/.var/app/ai.storyteller.photocraft/control-token"
+      ];
+    }
+    {
+      appId = "ai.storyteller.soundcraft";
+      commands = [ "soundcraft" "soundcraft-cli" ];
+      permissions = [ "--share=network" "--env=SOUNDCRAFT_CONTROL_PORT=7986" ];
+    }
   ];
 
   appIdOf = app: app.appId or (builtins.head (lib.splitString "//" app.ref));
 
+  # An ArtCraft GUI writes its key to control-key.<instance id>, but every
+  # `flatpak run` gets a new instance id, so the CLI never finds that file on its
+  # own. This picks the newest key file that belongs to a still running instance.
+  artcraftControlKeyLookup = appId: variable: ''
+    if [ -z "''${${variable}:-}" ]; then
+      key_files=()
+      while read -r instance app; do
+        [ "$app" = ${lib.escapeShellArg appId} ] || continue
+        for key_file in "$HOME"/.var/app/${lib.escapeShellArg appId}/config/*/control-key."$instance"; do
+          [ -r "$key_file" ] && key_files+=("$key_file")
+        done
+      done < <(${flatpak} ps --columns=instance,application)
+      if [ "''${#key_files[@]}" -gt 0 ]; then
+        ${variable}="$(< "$(${pkgs.coreutils}/bin/ls -t "''${key_files[@]}" | ${pkgs.coreutils}/bin/head -n 1)")"
+        export ${variable}
+      fi
+    fi
+  '';
+
   # Without a scope flag, `flatpak run` finds the app in the user or system installation.
-  mkFlatpakCommand = scopeArgs: appId: command:
+  mkFlatpakCommand = scopeArgs: app: command: let
+    appId = appIdOf app;
+  in
     pkgs.writeShellScriptBin command ''
+      ${lib.optionalString (app ? artcraftControlKey && lib.elem command app.artcraftControlKey.commands)
+        (artcraftControlKeyLookup appId app.artcraftControlKey.variable)}
       exec ${flatpak} run ${scopeArgs} --command=${lib.escapeShellArg command} ${lib.escapeShellArg appId} "$@"
     '';
 
   flatpakCommandWrappers =
-    lib.concatMap (app: map (mkFlatpakCommand "--system" (appIdOf app)) (app.commands or [ ])) flatpakApps
-    ++ lib.concatMap (app: map (mkFlatpakCommand "" app.appId) app.commands) unmanagedFlatpakApps;
+    lib.concatMap (app: map (mkFlatpakCommand "--system" app) (app.commands or [ ])) flatpakApps
+    ++ lib.concatMap (app: map (mkFlatpakCommand "" app) app.commands) unmanagedFlatpakApps;
 
   flatpakBootstrapScript = let
     curl = lib.getExe pkgs.curl;
@@ -148,6 +211,17 @@ let
 in
 {
   environment.systemPackages = [ pkgs.warehouse ] ++ flatpakCommandWrappers;
+
+  # User overrides must be written by the user, so Home Manager activation applies them.
+  home-manager.sharedModules = [
+    ({ lib, ... }: {
+      home.activation.unmanagedFlatpakPermissions = lib.hm.dag.entryAfter [ "writeBoundary" ] (
+        lib.concatMapStringsSep "\n" (app:
+          "run ${flatpak} override --user ${lib.escapeShellArgs app.permissions} ${lib.escapeShellArg app.appId}"
+        ) (lib.filter (app: app ? permissions) unmanagedFlatpakApps)
+      );
+    })
+  ];
 
   # Native NixOS Flatpak support; Warehouse manages the system installation afterwards.
   services.flatpak.enable = true;
