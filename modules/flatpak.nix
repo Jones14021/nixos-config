@@ -54,6 +54,10 @@ let
       ];
     }
     {
+      appId = "ai.storyteller.artcraft-launcher";
+      bundleUrl = "https://github.com/storytold/craft-launcher/releases/download/v0.5.1/artcraft-launcher-0.5.1-linux-x86_64.flatpak";
+    }
+    {
       appId = "com.zubersoft.mobileSheetsCompanion";
       bundleUrl = "https://www.zubersoft.download/mobilesheets.flatpak";
     }
