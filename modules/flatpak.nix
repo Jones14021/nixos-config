@@ -19,11 +19,16 @@
   External bundle entries are downloaded only when their appId is missing; the
   temporary bundle is deleted after installation. Rebuilds do not download an
   installed external-bundle app again.
+
+  Commands listed in `commands` (in flatpakApps or unmanagedFlatpakApps) get
+  small wrapper scripts on the system PATH that call `flatpak run --command=...`,
+  so CLIs packaged inside a Flatpak can be used and tab-completed in a terminal.
 */
 { lib, pkgs, ... }:
 let
   systemctl = "${pkgs.systemd}/bin/systemctl";
   journalctl = "${pkgs.systemd}/bin/journalctl";
+  flatpak = lib.getExe pkgs.flatpak;
 
   # Each item is either:
   # - { ref = "APPLICATION_ID//BRANCH"; } for an app from Flathub.
@@ -33,12 +38,15 @@ let
   # Both forms may add permissions = [ "--FLATPAK-OVERRIDE-OPTION" ... ]; to
   # declare app-specific `flatpak override --system` options. For example,
   # permissions = [ "--filesystem=home" "--share=network" ];
+  # Both forms may also add commands = [ "COMMAND" ... ]; to put executables
+  # from the app's /app/bin on the host PATH.
   flatpakApps = [
     { ref = "com.github.tchx84.Flatseal//stable"; }
     { ref = "com.thincast.client//stable"; }
     {
       appId = "ai.storyteller.solidcraft";
       bundleUrl = "https://github.com/tangency-labs/solidcraft/releases/download/v0.16.2/solidcraft-linux-x86_64.flatpak";
+      commands = [ "solidcraft-cli" "solvecraft-cli" "solidcraft" ];
       permissions = [
         "--filesystem=host"
         "--talk-name=org.freedesktop.Flatpak"
@@ -63,8 +71,32 @@ let
     }
   ];
 
+  # Flatpaks installed and updated outside Nix (e.g. user-installed by the
+  # ArtCraft launcher). Only their command wrappers are declared here; a missing
+  # app does not break the rebuild, its wrapper just reports it as not installed.
+  unmanagedFlatpakApps = [
+    { appId = "ai.storyteller.wordcraft"; commands = [ "wordcraft" "wordcraft-cli" ]; }
+    { appId = "ai.storyteller.cadcraft"; commands = [ "cadcraft" "cadcraft-cli" ]; }
+    { appId = "ai.storyteller.deckcraft"; commands = [ "deckcraft" "deckcraft-cli" ]; }
+    { appId = "ai.storyteller.gridcraft"; commands = [ "gridcraft" "gridcraft-cli" ]; }
+    { appId = "ai.storyteller.pdfcraft"; commands = [ "pdfcraft" "pdfcraft-cli" ]; }
+    { appId = "ai.storyteller.photocraft"; commands = [ "photocraft" "photocraft-cli" ]; }
+    { appId = "ai.storyteller.soundcraft"; commands = [ "soundcraft" "soundcraft-cli" ]; }
+  ];
+
+  appIdOf = app: app.appId or (builtins.head (lib.splitString "//" app.ref));
+
+  # Without a scope flag, `flatpak run` finds the app in the user or system installation.
+  mkFlatpakCommand = scopeArgs: appId: command:
+    pkgs.writeShellScriptBin command ''
+      exec ${flatpak} run ${scopeArgs} --command=${lib.escapeShellArg command} ${lib.escapeShellArg appId} "$@"
+    '';
+
+  flatpakCommandWrappers =
+    lib.concatMap (app: map (mkFlatpakCommand "--system" (appIdOf app)) (app.commands or [ ])) flatpakApps
+    ++ lib.concatMap (app: map (mkFlatpakCommand "" app.appId) app.commands) unmanagedFlatpakApps;
+
   flatpakBootstrapScript = let
-    flatpak = lib.getExe pkgs.flatpak;
     curl = lib.getExe pkgs.curl;
   in ''
     set -eu
@@ -109,16 +141,13 @@ let
     ) flatpakApps}
 
     ${lib.concatMapStringsSep "\n" (app:
-      let
-        appId = app.appId or (builtins.head (lib.splitString "//" app.ref));
-      in
-        lib.optionalString (app ? permissions)
-          "apply_permission_override ${lib.escapeShellArg appId} ${lib.escapeShellArgs app.permissions}"
+      lib.optionalString (app ? permissions)
+        "apply_permission_override ${lib.escapeShellArg (appIdOf app)} ${lib.escapeShellArgs app.permissions}"
     ) flatpakApps}
   '';
 in
 {
-  environment.systemPackages = [ pkgs.warehouse ];
+  environment.systemPackages = [ pkgs.warehouse ] ++ flatpakCommandWrappers;
 
   # Native NixOS Flatpak support; Warehouse manages the system installation afterwards.
   services.flatpak.enable = true;
