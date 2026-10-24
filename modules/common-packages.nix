@@ -18,8 +18,6 @@
     nano
     git
     unstablePkgs.vscode
-    unstablePkgs.uv
-    unstablePkgs.opencode
     rclone
     fuse
     wget
@@ -117,6 +115,7 @@
     nrfconnect
 
     # Python
+    unstablePkgs.uv
     python312
     (python313.withPackages (ps: with ps; [
       pyserial
@@ -162,6 +161,7 @@
     zotero
     haruna # video player
     diffpdf
+    unstablePkgs.opencode
 
     # android stuff
     android-tools
