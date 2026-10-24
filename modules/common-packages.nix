@@ -44,12 +44,39 @@
     samba
     tree
     wireguard-tools # 'wg' command
-    bubblewrap # often a prerequisite for AI agent sandboxing
-    socat # often a prerequisite for AI agent sandboxing
-    ripgrep # ripgrep, for searching text in files (used by AI agents)
-    ripgrep-all # ripgrep-all, for searching text in files (including PDFs, EPUBs, ...) (used by AI agents)
     jdk25
     p7zip
+    quota
+
+    ### AI agent tools
+    bubblewrap # often a prerequisite for AI agent sandboxing
+    socat # often a prerequisite for AI agent sandboxing
+
+    # Search & Discovery
+    # (e.g., tools for finding and indexing files, web search, etc.)
+    ripgrep # ripgrep, for searching text in files
+    ripgrep-all # ripgrep-all, for searching text in files (including PDFs, EPUBs, ...)
+    fd # A simple, fast, and user-friendly alternative to find
+    fzf # A general-purpose command-line fuzzy finder
+
+    # Data Parsing & Structuring
+    jq # A lightweight and flexible command-line JSON processor used to query, parse, and filter API responses and JSON configurations
+    yq # A lightweight and flexible command-line YAML processor used to query, parse, and filter API responses and YAML configurations
+    fq # A tool for inspecting, querying, and decoding binary and protocol formats
+
+
+    # Web & API Interaction
+    hurl # A command-line tool that runs HTTP requests defined in a simple plain text format, useful for agent-driven API testing and web interactions.
+    defuddle # Specialized utilities used to extract clean article text or fetch heavy JavaScript web pages for agent consumption.
+    obscura # Specialized utilities used to extract clean article text or fetch heavy JavaScript web pages for agent consumption.
+
+    # Process & Environment Management
+    procs # A modern replacement for ps that provides structured output (like JSON) when inspecting running system processes and resource usage.
+    dust # A more intuitive disk usage analyzer that helps agents identify large directories and storage consumers.
+
+    # Git & Source Control
+    gh # The official GitHub CLI tool, allowing AI agents to interact directly with repositories, pull requests, issues, and workflows.
+
 
     # Filesystem tools for GParted
     bcachefs-tools # bcachefs
