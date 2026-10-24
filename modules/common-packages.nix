@@ -194,11 +194,11 @@
 
   # overlays to customize certain packages
   nixpkgs.overlays = [
-    # Example overlay to customize google-chrome
     (final: prev: {
-      google-chrome = prev.google-chrome.override {
-        commandLineArgs = "--disable-gpu";
-      };
+      # Example overlay to customize google-chrome
+      #google-chrome = prev.google-chrome.override {
+      #  commandLineArgs = "--disable-gpu";
+      #};
       foliate = prev.foliate.overrideAttrs (old: {
         postFixup = (old.postFixup or "") + ''
           wrapProgram "$out/bin/foliate" --set GDK_BACKEND x11
