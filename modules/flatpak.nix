@@ -22,11 +22,18 @@
   after installation. Changing bundleUrl therefore upgrades or downgrades the
   app on the next rebuild; an unchanged bundleUrl never triggers a download.
 
+  `permissions` are system overrides for flatpakApps and user overrides (for
+  every Home Manager user) for unmanagedFlatpakApps. They are applied only when
+  they changed since the last rebuild: without manual tweaks the overrides are
+  reset to exactly the declared set; with Flatseal tweaks the declared options
+  are added and the tweaks are kept. Each rebuild prints a diff in the
+  flatpak-bootstrap output for every app whose overrides deviate from the config.
+
   Commands listed in `commands` (in flatpakApps or unmanagedFlatpakApps) get
   small wrapper scripts on the system PATH that call `flatpak run --command=...`,
   so CLIs packaged inside a Flatpak can be used and tab-completed in a terminal.
 */
-{ lib, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 let
   systemctl = "${pkgs.systemd}/bin/systemctl";
   journalctl = "${pkgs.systemd}/bin/journalctl";
@@ -77,7 +84,12 @@ let
   # Flatpaks installed and updated outside Nix (e.g. user-installed by the
   # ArtCraft launcher). Only their command wrappers are declared here; a missing
   # app does not break the rebuild, its wrapper just reports it as not installed.
-  # permissions = [ ... ] are applied as `flatpak override --user` options.
+  # permissions = [ ... ] are `flatpak override --user` options. The
+  # flatpak-bootstrap service writes them as each Home Manager user (via
+  # runuser) into ~/.local/share/flatpak/overrides/<appId>, even before the app
+  # is installed, so they are in place when the launcher installs it. Like the
+  # system overrides, they are only rewritten when `permissions` changed, and
+  # manual Flatseal tweaks are kept and reported as a deviation.
   # artcraftControlKey = { variable = "..."; commands = [ ... ]; } makes those
   # wrappers hand the running GUI's control key to the CLI (ArtCraft apps only,
   # needed for `mcp --connect`).
@@ -201,10 +213,54 @@ let
       printf '%s' "$bundle_url" > "$url_file"
     }
 
-    apply_permission_override() {
-      app_id="$1"
-      shift
-      ${flatpak} override --system "$@" "$app_id"
+    # Usage: sync_permissions system|USER HOME APP_ID [OVERRIDE-OPTION...]
+    sync_permissions() {
+      owner="$1"
+      home="$2"
+      app_id="$3"
+      shift 3
+
+      if [ "$owner" = system ]; then
+        override_file="/var/lib/flatpak/overrides/$app_id"
+        run_override() { ${flatpak} override --system "$@" "$app_id"; }
+      else
+        override_file="$home/.local/share/flatpak/overrides/$app_id"
+        run_override() {
+          ${pkgs.util-linux}/bin/runuser -u "$owner" -- \
+            ${pkgs.coreutils}/bin/env HOME="$home" ${flatpak} override --user "$@" "$app_id"
+        }
+      fi
+      state_file="$bundle_state_dir/overrides/$owner/$app_id"
+      mkdir --parents "$(dirname "$state_file")"
+
+      # Let flatpak write the declared overrides into a scratch dir so they are comparable.
+      render_dir="$(mktemp --directory)"
+      if [ "$#" -gt 0 ]; then
+        FLATPAK_USER_DIR="$render_dir" ${flatpak} override --user "$@" "$app_id"
+      fi
+      declared="$(cat "$render_dir/overrides/$app_id" 2>/dev/null || true)"
+      rm --recursive --force "$render_dir"
+      last="$(cat "$state_file" 2>/dev/null || true)"
+      actual="$(cat "$override_file" 2>/dev/null || true)"
+
+      if [ "$declared" != "$last" ] && [ "$actual" != "$declared" ]; then
+        if [ "$actual" = "$last" ]; then
+          run_override --reset
+          [ "$#" -eq 0 ] || run_override "$@"
+          echo "flatpak-bootstrap: applied changed permissions for $app_id ($owner)"
+        else
+          [ "$#" -eq 0 ] || run_override "$@"
+          echo "flatpak-bootstrap: $app_id ($owner) has manual overrides; added the declared permissions without resetting, so permissions removed from the config may still be granted" >&2
+        fi
+        actual="$(cat "$override_file" 2>/dev/null || true)"
+      fi
+      printf '%s' "$declared" > "$state_file"
+
+      if [ "$actual" != "$declared" ]; then
+        echo "flatpak-bootstrap: $app_id ($owner) overrides deviate from config:" >&2
+        ${pkgs.diffutils}/bin/diff --unified --label declared --label actual \
+          <(printf '%s\n' "$declared") <(printf '%s\n' "$actual") >&2 || true
+      fi
     }
 
     ${lib.concatMapStringsSep "\n" (app:
@@ -215,24 +271,18 @@ let
     ) flatpakApps}
 
     ${lib.concatMapStringsSep "\n" (app:
-      lib.optionalString (app ? permissions)
-        "apply_permission_override ${lib.escapeShellArg (appIdOf app)} ${lib.escapeShellArgs app.permissions}"
+      "sync_permissions system '' ${lib.escapeShellArg (appIdOf app)} ${lib.escapeShellArgs (app.permissions or [ ])}"
     ) flatpakApps}
+
+    ${lib.concatMapStringsSep "\n" (user:
+      lib.concatMapStringsSep "\n" (app:
+        "sync_permissions ${lib.escapeShellArg user} ${lib.escapeShellArg config.users.users.${user}.home} ${lib.escapeShellArg app.appId} ${lib.escapeShellArgs (app.permissions or [ ])}"
+      ) unmanagedFlatpakApps
+    ) (lib.attrNames config.home-manager.users)}
   '';
 in
 {
   environment.systemPackages = [ pkgs.warehouse ] ++ flatpakCommandWrappers;
-
-  # User overrides must be written by the user, so Home Manager activation applies them.
-  home-manager.sharedModules = [
-    ({ lib, ... }: {
-      home.activation.unmanagedFlatpakPermissions = lib.hm.dag.entryAfter [ "writeBoundary" ] (
-        lib.concatMapStringsSep "\n" (app:
-          "run ${flatpak} override --user ${lib.escapeShellArgs app.permissions} ${lib.escapeShellArg app.appId}"
-        ) (lib.filter (app: app ? permissions) unmanagedFlatpakApps)
-      );
-    })
-  ];
 
   # Native NixOS Flatpak support; Warehouse manages the system installation afterwards.
   services.flatpak.enable = true;
