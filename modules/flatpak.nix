@@ -60,7 +60,8 @@ let
         "--filesystem=/nix/store:ro"
         "--filesystem=~/.config/opencode:ro"
         "--filesystem=~/.local/share/opencode"
-        "--env=PATH=/run/current-system/sw/bin:/app/bin:/usr/bin"
+        # /app/bin first, or the host's command wrappers shadow the app's own binaries.
+        "--env=PATH=/app/bin:/usr/bin:/run/current-system/sw/bin"
       ];
     }
     {
