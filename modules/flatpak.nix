@@ -45,7 +45,7 @@ let
     { ref = "com.thincast.client//stable"; }
     {
       appId = "ai.storyteller.solidcraft";
-      bundleUrl = "https://github.com/tangency-labs/solidcraft/releases/download/v0.16.2/solidcraft-linux-x86_64.flatpak";
+      bundleUrl = "https://github.com/tangency-labs/solidcraft/releases/download/v0.22.0/solidcraft-0.22.0-linux-x86_64.flatpak";
       commands = [ "solidcraft-cli" "solvecraft-cli" "solidcraft" ];
       permissions = [
         "--filesystem=host"
