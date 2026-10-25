@@ -54,6 +54,10 @@
     # as needed. Nix modules will merge (but not de-duplicate!) all package lists.
   ];
 
+  # Graphics configuration for Intel media driver and VA-API
+  hardware.graphics.extraPackages = with pkgs; [ intel-media-driver ];
+  environment.sessionVariables.LIBVA_DRIVER_NAME = "iHD";
+
   nix.settings.experimental-features = [ "flakes" "nix-command" ];
 
   # This value determines the NixOS release from which the default
