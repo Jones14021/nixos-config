@@ -16,9 +16,11 @@
   installs it again because it is missing. Remove its entry from flatpakApps
   first if the removal should persist.
 
-  External bundle entries are downloaded only when their appId is missing; the
-  temporary bundle is deleted after installation. Rebuilds do not download an
-  installed external-bundle app again.
+  External bundle entries are downloaded when their appId is missing or their
+  bundleUrl differs from the one last installed (recorded in
+  /var/lib/flatpak-bootstrap/<appId>.url); the temporary bundle is deleted
+  after installation. Changing bundleUrl therefore upgrades or downgrades the
+  app on the next rebuild; an unchanged bundleUrl never triggers a download.
 
   Commands listed in `commands` (in flatpakApps or unmanagedFlatpakApps) get
   small wrapper scripts on the system PATH that call `flatpak run --command=...`,
@@ -33,8 +35,8 @@ let
   # Each item is either:
   # - { ref = "APPLICATION_ID//BRANCH"; } for an app from Flathub.
   # - { appId = "APPLICATION_ID"; bundleUrl = "https://.../app.flatpak"; }
-  #   for an external Flatpak bundle. The app is downloaded and installed only
-  #   when that application ID is not already installed system-wide.
+  #   for an external Flatpak bundle. The app is (re)installed when that
+  #   application ID is missing system-wide or bundleUrl has changed.
   # Both forms may add permissions = [ "--FLATPAK-OVERRIDE-OPTION" ... ]; to
   # declare app-specific `flatpak override --system` options. For example,
   # permissions = [ "--filesystem=home" "--share=network" ];
@@ -176,18 +178,26 @@ let
       fi
     }
 
-    install_bundle_if_missing() {
+    bundle_state_dir=/var/lib/flatpak-bootstrap
+    mkdir --parents "$bundle_state_dir"
+
+    install_bundle_if_missing_or_changed() {
       app_id="$1"
       bundle_url="$2"
-      bundle_path="$(mktemp --tmpdir=/var/lib/flatpak --suffix=.flatpak)"
+      url_file="$bundle_state_dir/$app_id.url"
 
-      if ! ${flatpak} info --system "$app_id" >/dev/null 2>&1; then
-        trap 'rm --force "$bundle_path"' EXIT
-        ${curl} --fail --location --output "$bundle_path" "$bundle_url"
-        ${flatpak} install --system --noninteractive "$bundle_path"
-        rm --force "$bundle_path"
-        trap - EXIT
+      if ${flatpak} info --system "$app_id" >/dev/null 2>&1 \
+        && [ "$(cat "$url_file" 2>/dev/null)" = "$bundle_url" ]; then
+        return 0
       fi
+
+      bundle_path="$(mktemp --tmpdir=/var/lib/flatpak --suffix=.flatpak)"
+      trap 'rm --force "$bundle_path"' EXIT
+      ${curl} --fail --location --output "$bundle_path" "$bundle_url"
+      ${flatpak} install --system --noninteractive --reinstall "$bundle_path"
+      rm --force "$bundle_path"
+      trap - EXIT
+      printf '%s' "$bundle_url" > "$url_file"
     }
 
     apply_permission_override() {
@@ -200,7 +210,7 @@ let
       if app ? ref then
         "install_flathub_if_missing ${lib.escapeShellArg app.ref}"
       else
-        "install_bundle_if_missing ${lib.escapeShellArg app.appId} ${lib.escapeShellArg app.bundleUrl}"
+        "install_bundle_if_missing_or_changed ${lib.escapeShellArg app.appId} ${lib.escapeShellArg app.bundleUrl}"
     ) flatpakApps}
 
     ${lib.concatMapStringsSep "\n" (app:
