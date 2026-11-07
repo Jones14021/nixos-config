@@ -42,6 +42,14 @@
     # as needed. Nix modules will merge (but not de-duplicate!) all package lists.
   ];
 
+  nixpkgs.overlays = [
+    (final: prev: {
+      google-chrome = prev.google-chrome.override {
+        commandLineArgs = "--ozone-platform=x11";
+      };
+    })
+  ];
+
   nix.settings.experimental-features = [ "flakes" "nix-command" ];
 
   # This value determines the NixOS release from which the default
