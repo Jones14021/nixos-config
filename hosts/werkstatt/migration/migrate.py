@@ -28,6 +28,7 @@ GITEA_LEGACY_SECRET = "!#@FDEWREWR&*("
 NAS_SHARE = "//10.0.2.200/shared_common"
 NAS_FOLDER = "services_migration"
 DESTINATION = Path("/home/jonas/services")
+COMPOSE_DIRECTORY = Path("/etc/werkstatt/compose")
 REQUIRED_VOLUMES = {
     "gitea_gitea", "norish_norish_data", "norish_db_data", "norish_redis_data",
     "guacamole_guacamole_config", "firefly-iii_db", "firefly-iii_redis",
@@ -79,6 +80,29 @@ RESTORE_ARCHIVES = {
     "jellyfin-data": "system/jellyfin-data.tar",
     "jellyfin-config": "system/jellyfin-config.tar",
 }
+SERVICE_PROJECTS = (
+    "gitea", "jellyfin", "proxy", "norish", "guacamole", "firefly",
+    "bitwarden-backup",
+)
+START_UNITS = (
+    "gitea", "jellyfin", "werkstatt-proxy", "werkstatt-norish",
+    "werkstatt-guacamole", "werkstatt-firefly",
+)
+SERVICE_REQUIRED_DIRS = (
+    "gitea/repositories", "gitea/data", "jellyfin/data", "jellyfin/config",
+    "proxy/data", "proxy/letsencrypt", "norish/uploads", "norish/postgres",
+    "norish/redis", "guacamole/config", "firefly/mysql", "firefly/redis",
+    "firefly/upload", "bitwarden-backup", "secrets",
+)
+SERVICE_REQUIRED_FILES = (
+    "gitea/data/gitea.db", "gitea/custom/conf/secret_key",
+    "gitea/custom/conf/internal_token",
+    "gitea/custom/conf/oauth2_jwt_secret", "gitea/custom/conf/lfs_jwt_secret",
+    "secrets/nas.creds", "secrets/guacamole.env", "secrets/norish.env",
+    "secrets/norish-db.env", "secrets/norish-obscura.env",
+    "secrets/firefly.env", "secrets/firefly-db.env",
+    "secrets/firefly-cron.env", "secrets/bitwarden-backup.env",
+)
 
 
 class MigrationError(Exception):
@@ -717,6 +741,61 @@ def target_units_inactive():
             raise MigrationError(f"Target readiness marker already exists: {marker}")
 
 
+def start_services():
+    if not DESTINATION.is_dir() or DESTINATION.is_symlink():
+        raise MigrationError("The services directory is missing or is a symlink")
+
+    def checked_path(relative):
+        path = DESTINATION
+        for component in Path(relative).parts:
+            path = path / component
+            if path.is_symlink():
+                raise MigrationError(f"Unsafe symlink in restored path: {path}")
+        return path
+
+    for relative in SERVICE_REQUIRED_DIRS:
+        path = checked_path(relative)
+        if not path.is_dir():
+            raise MigrationError(f"Restored directory missing or unsafe: {path}")
+    for relative in SERVICE_REQUIRED_FILES:
+        path = checked_path(relative)
+        if not path.is_file() or path.stat().st_size == 0:
+            raise MigrationError(f"Restored file missing or empty: {path}")
+    for project in SERVICE_PROJECTS:
+        marker = checked_path(f"{project}/.ready")
+        if marker.exists() and not marker.is_file():
+            raise MigrationError(f"Unsafe readiness marker: {marker}")
+    for name in ("proxy", "norish", "guacamole", "firefly", "bitwarden-backup"):
+        command(
+            "docker-compose", "-p", f"werkstatt-{name}", "-f",
+            str(COMPOSE_DIRECTORY / f"{name}.json"), "config", "--quiet",
+        )
+    require_confirmation(
+        "Enable and start Gitea, Jellyfin, proxy, Norish, Guacamole and "
+        "Firefly? This may upgrade application databases. The old services "
+        "must remain stopped.", "START SERVICES"
+    )
+    for project in SERVICE_PROJECTS:
+        marker = DESTINATION / project / ".ready"
+        if not marker.exists():
+            with open(marker, "x", encoding="utf-8"):
+                pass
+    command("systemctl", "reset-failed", *START_UNITS)
+    failed = []
+    for unit in START_UNITS:
+        result = command("systemctl", "start", unit, check=False)
+        active = command("systemctl", "is-active", "--quiet", unit, check=False)
+        if result.returncode or active.returncode:
+            failed.append(unit)
+    if failed:
+        raise MigrationError(
+            f"Some services did not start: {', '.join(failed)}. "
+            "Check their journals; NAS backup remains intact"
+        )
+    print("Services started. Check container health, logins and data.")
+    print("Bitwarden backup remains manual; migrate Home Assistant separately.")
+
+
 def restore_snapshot(snapshot, share, credentials):
     manifest = load_manifest(snapshot)
     if manifest.get("source") != "ubuntu2004":
@@ -773,26 +852,7 @@ def restore_snapshot(snapshot, share, credentials):
     else:
         print("Loading the saved Docker images into the empty image store.", flush=True)
         command("docker", "image", "load", "--input", str(Path(snapshot) / "docker-images.tar"))
-    require_confirmation(
-        "Enable and start the restored Gitea, Jellyfin, proxy, Norish, Guacamole and Firefly services? "
-        "This may upgrade application databases. The old services must remain stopped.", "START SERVICES"
-    )
-    projects = ("gitea", "jellyfin", "proxy", "norish", "guacamole", "firefly", "bitwarden-backup")
-    for project in projects:
-        marker = DESTINATION / project / ".ready"
-        with open(marker, "x", encoding="utf-8"):
-            pass
-    units = ("gitea", "jellyfin", "werkstatt-proxy", "werkstatt-norish", "werkstatt-guacamole", "werkstatt-firefly")
-    failed = []
-    for unit in units:
-        result = command("systemctl", "start", unit, check=False)
-        active = command("systemctl", "is-active", "--quiet", unit, check=False)
-        if result.returncode or active.returncode:
-            failed.append(unit)
-    if failed:
-        raise MigrationError(f"Some services did not start: {', '.join(failed)}. Check their journals; NAS backup remains intact")
-    print("Services started. Check container health, application logins and data before cutover.")
-    print("The Bitwarden backup remains a manually started one-shot; Home Assistant must be migrated separately.")
+    start_services()
     answer = input("Enroll the new Tailscale node now? [Y/n]: ").strip().lower()
     if answer in {"", "y", "yes"}:
         command("tailscale", "up")
@@ -803,7 +863,7 @@ def restore_snapshot(snapshot, share, credentials):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", nargs="?", choices=("backup", "restore"),
+    parser.add_argument("mode", nargs="?", choices=("backup", "restore", "start"),
                         help="default: backup on ubuntu2004, restore on werkstatt")
     parser.add_argument("--snapshot", help="restore a specific complete snapshot by its directory name")
     arguments = parser.parse_args(argv)
@@ -811,19 +871,25 @@ def main(argv=None):
         raise MigrationError("Run this script as root using sudo")
     hostname = socket.gethostname().split(".", 1)[0]
     expected_mode = {"ubuntu2004": "backup", "werkstatt": "restore"}.get(hostname)
-    if expected_mode is None or (arguments.mode and arguments.mode != expected_mode):
-        raise MigrationError("Run backup only on ubuntu2004 and restore only on werkstatt")
-    if arguments.snapshot and expected_mode != "restore":
-        raise MigrationError("--snapshot is only valid on the restore host")
+    mode = arguments.mode or expected_mode
+    if expected_mode is None or (expected_mode == "backup" and mode != "backup") or (expected_mode == "restore" and mode not in {"restore", "start"}):
+        raise MigrationError("Run backup only on ubuntu2004 and restore/start only on werkstatt")
+    if arguments.snapshot and mode != "restore":
+        raise MigrationError("--snapshot is only valid in restore mode")
+    if mode == "start":
+        require_commands(("docker-compose", "systemctl"))
+        with exclusive_lock():
+            start_services()
+        return
     if not hasattr(tarfile, "data_filter"):
         raise MigrationError("Python 3.12 or newer is required for safe tar extraction")
     require_commands(("docker", "tar", "mount", "mount.cifs", "umount", "findmnt", "systemctl", "du"))
-    if expected_mode == "restore":
+    if mode == "restore":
         require_commands(("docker-compose", "tailscale"))
     print(f"Using {NAS_SHARE}/{NAS_FOLDER}. The backup contains plaintext secrets.")
     credentials = ask_credentials()
-    with exclusive_lock(), mounted_nas(credentials, read_only=expected_mode == "restore") as share:
-        if expected_mode == "backup":
+    with exclusive_lock(), mounted_nas(credentials, read_only=mode == "restore") as share:
+        if mode == "backup":
             create_snapshot(share)
         else:
             snapshot = select_snapshot(share, arguments.snapshot)

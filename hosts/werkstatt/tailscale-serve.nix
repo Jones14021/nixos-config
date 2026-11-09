@@ -9,10 +9,12 @@
 # `tailscale serve status` and the unit's journal if certificates or routes fail.
 # The unit retries until the node and HTTPS prerequisites are ready.
 #
-# The port list uses the original service ports for HTTPS on the tailnet and
-# proxies each to the same port on localhost: 81 is proxy administration,
-# 5000 Gitea, 6182 Firefly, 8096 Jellyfin, 9800 Guacamole, 9901 Norish and
-# 19999 Netdata. Gitea SSH is not an HTTP route. Home Assistant uses its own
+# Serve uses separate HTTPS ports because its tailnet listeners otherwise
+# conflict with services listening on all interfaces at their original ports.
+# 10081 proxies 81 (proxy administration), 15000 proxies 5000 (Gitea), 16182
+# proxies 6182 (Firefly), 18096 proxies 8096 (Jellyfin), 19800 proxies 9800
+# (Guacamole), 19901 proxies 9901 (Norish), and 19999 proxies 19999 (Netdata).
+# Gitea SSH is not an HTTP route. Home Assistant uses its own
 # Tailscale installation inside the bridged VM, so it is intentionally absent.
 # Some apps require a canonical external URL or trusted-proxy settings; review
 # them when choosing LAN, reverse-proxy or tailnet access.
@@ -23,7 +25,15 @@
 { pkgs, ... }:
 
 let
-  routes = [ 81 5000 6182 8096 9800 9901 19999 ];
+  routes = [
+    { serve = 10081; backend = 81; }     # Nginx Proxy Manager administration
+    { serve = 15000; backend = 5000; }   # Gitea
+    { serve = 16182; backend = 6182; }   # Firefly III
+    { serve = 18096; backend = 8096; }   # Jellyfin
+    { serve = 19800; backend = 9800; }   # Guacamole
+    { serve = 19901; backend = 9901; }   # Norish
+    { serve = 19999; backend = 19999; }  # Netdata
+  ];
 in
 {
   systemd.services.werkstatt-tailscale-serve = {
@@ -38,8 +48,8 @@ in
       Restart = "on-failure";
       RestartSec = "30s";
     };
-    script = builtins.concatStringsSep "\n" (map (port:
-      "${pkgs.tailscale}/bin/tailscale serve --bg --yes --https=${toString port} http://127.0.0.1:${toString port}"
+    script = builtins.concatStringsSep "\n" (map (route:
+      "${pkgs.tailscale}/bin/tailscale serve --bg --yes --https=${toString route.serve} http://127.0.0.1:${toString route.backend}"
     ) routes);
   };
 }

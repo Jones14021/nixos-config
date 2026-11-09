@@ -1,4 +1,5 @@
 import importlib.util
+import contextlib
 import io
 import json
 import os
@@ -18,6 +19,15 @@ SPEC.loader.exec_module(migrate)
 
 class MigrationTests(unittest.TestCase):
     @staticmethod
+    def create_service_fixture(root):
+        for relative in migrate.SERVICE_REQUIRED_DIRS:
+            (root / relative).mkdir(parents=True, exist_ok=True)
+        for relative in migrate.SERVICE_REQUIRED_FILES:
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("restored")
+
+    @staticmethod
     def example_metadata():
         def container(name, values, cmd=None):
             return {"Name": "/" + name, "Config": {"Env": [f"{key}={value}" for key, value in values.items()], "Cmd": cmd or []}}
@@ -36,6 +46,88 @@ class MigrationTests(unittest.TestCase):
     def test_compose_env_rejects_multiline(self):
         with self.assertRaises(migrate.MigrationError):
             migrate.compose_env_line("TOKEN", "one\ntwo")
+
+    def test_start_reuses_existing_markers_and_starts_services(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.create_service_fixture(root)
+            marker = root / "gitea/.ready"
+            marker.write_text("existing")
+            calls = []
+            def fake_command(*arguments, **kwargs):
+                calls.append(arguments)
+                return subprocess.CompletedProcess(arguments, 0)
+            with mock.patch.object(migrate, "DESTINATION", root), \
+                 mock.patch.object(migrate, "command", side_effect=fake_command), \
+                 mock.patch.object(migrate, "require_confirmation") as confirmation:
+                migrate.start_services()
+            self.assertEqual(marker.read_text(), "existing")
+            self.assertTrue(all((root / project / ".ready").is_file() for project in migrate.SERVICE_PROJECTS))
+            self.assertIn(("systemctl", "reset-failed", *migrate.START_UNITS), calls)
+            self.assertEqual([call[2] for call in calls if call[:2] == ("systemctl", "start")], list(migrate.START_UNITS))
+            confirmation.assert_called_once()
+
+    def test_start_rejects_missing_data_before_creating_markers(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.create_service_fixture(root)
+            (root / "gitea/data/gitea.db").unlink()
+            with mock.patch.object(migrate, "DESTINATION", root), mock.patch.object(migrate, "command") as run:
+                with self.assertRaisesRegex(migrate.MigrationError, "Restored file missing"):
+                    migrate.start_services()
+            self.assertFalse((root / "gitea/.ready").exists())
+            run.assert_not_called()
+
+    def test_start_reports_failures_after_trying_all_services(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.create_service_fixture(root)
+            calls = []
+            def fake_command(*arguments, **kwargs):
+                calls.append(arguments)
+                failed = arguments[:2] == ("systemctl", "start") and arguments[2] == "werkstatt-firefly"
+                return subprocess.CompletedProcess(arguments, 1 if failed else 0)
+            with mock.patch.object(migrate, "DESTINATION", root), \
+                 mock.patch.object(migrate, "command", side_effect=fake_command), \
+                 mock.patch.object(migrate, "require_confirmation"):
+                with self.assertRaisesRegex(migrate.MigrationError, "werkstatt-firefly"):
+                    migrate.start_services()
+            self.assertEqual([call[2] for call in calls if call[:2] == ("systemctl", "start")], list(migrate.START_UNITS))
+            self.assertNotIn(("systemctl", "start", "werkstatt-bitwarden-backup"), calls)
+
+    def test_start_rejects_symlinked_project(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.create_service_fixture(root)
+            (root / "proxy/data").rmdir()
+            (root / "proxy/data").symlink_to(root / "jellyfin/data")
+            with mock.patch.object(migrate, "DESTINATION", root):
+                with self.assertRaisesRegex(migrate.MigrationError, "Unsafe symlink"):
+                    migrate.start_services()
+
+    def test_start_declined_does_not_create_markers(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.create_service_fixture(root)
+            with mock.patch.object(migrate, "DESTINATION", root), \
+                 mock.patch.object(migrate, "command", return_value=subprocess.CompletedProcess([], 0)), \
+                 mock.patch.object(migrate, "require_confirmation", side_effect=migrate.MigrationError("declined")):
+                with self.assertRaisesRegex(migrate.MigrationError, "declined"):
+                    migrate.start_services()
+            self.assertFalse(any((root / project / ".ready").exists() for project in migrate.SERVICE_PROJECTS))
+
+    def test_start_mode_does_not_mount_nas(self):
+        with mock.patch.object(migrate.os, "geteuid", return_value=0), \
+             mock.patch.object(migrate.socket, "gethostname", return_value="werkstatt"), \
+             mock.patch.object(migrate, "require_commands"), \
+             mock.patch.object(migrate, "exclusive_lock", return_value=contextlib.nullcontext()), \
+             mock.patch.object(migrate, "ask_credentials") as credentials, \
+             mock.patch.object(migrate, "mounted_nas") as nas, \
+             mock.patch.object(migrate, "start_services") as start:
+            migrate.main(["start"])
+        credentials.assert_not_called()
+        nas.assert_not_called()
+        start.assert_called_once()
 
     def test_compose_env_round_trip(self):
         values = ["dollar$ quote' backslash\\ backslash-quote\\' trailing\\", "#starts-with-hash", '"quoted"', "  spaces  "]
@@ -304,6 +396,7 @@ class MigrationTests(unittest.TestCase):
                     return subprocess.run(arguments, text=True, check=True, capture_output=kwargs.get("capture", False))
                 return subprocess.CompletedProcess(arguments, 0, stdout="existing-image\n")
             with mock.patch.object(migrate, "DESTINATION", destination), \
+                  mock.patch.object(migrate, "COMPOSE_DIRECTORY", config_dir), \
                  mock.patch.object(migrate, "require_nas_mount"), \
                  mock.patch.object(migrate, "target_units_inactive"), \
                  mock.patch.object(migrate, "require_confirmation"), \

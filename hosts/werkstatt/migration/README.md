@@ -86,6 +86,20 @@ journals. Do not delete the NAS snapshot or rerun over partial destination
 files: the script intentionally refuses conflicts. Remove or relocate only
 after you have verified what was installed and have a separate backup.
 
+If installation finished but service activation was declined or interrupted,
+resume just that step on `werkstatt`:
+
+```sh
+sudo /run/current-system/sw/bin/werkstatt-migrate start
+```
+
+Confirm `START SERVICES` when prompted. This checks restored directories,
+secrets and Compose configuration, preserves existing `.ready` markers, and
+starts the selected services without mounting or copying the migration snapshot.
+Jellyfin itself still requires the workouts NAS share to be available. The
+Bitwarden backup stays a manual one-shot. Check service and container health
+afterward; an active Compose unit alone is not a health guarantee.
+
 The NAS username/password entered on the new host are also installed as
 `nas.creds` if that file does not already exist. An existing regular file is
 preserved. The account must have the share permissions described below; if it
@@ -191,9 +205,11 @@ and required secrets. Home Assistant starts automatically once `br0` exists.
 2. Run `sudo systemctl restart werkstatt-tailscale-serve`. Check
    `tailscale serve status` and `journalctl -u werkstatt-tailscale-serve -b`.
    The service retries if enrollment or HTTPS is not ready; it does not enable
-   Funnel. HTTPS routes use the machine's Tailscale DNS name and ports 81,
-   5000, 6182, 8096, 9800, 9901 and 19999. Port 81 is proxy administration.
-   Gitea SSH on 2221 is ordinary SSH. Home Assistant uses its own Tailscale.
+   Funnel. HTTPS routes use the machine's Tailscale DNS name and separate
+   listener ports: 10081 for proxy administration, 15000 for Gitea, 16182 for
+   Firefly, 18096 for Jellyfin, 19800 for Guacamole, 19901 for Norish and
+   19999 for Netdata. Their original LAN ports are unchanged. Gitea SSH on
+   2221 is ordinary SSH. Home Assistant uses its own Tailscale.
 3. Visit `https://<werkstatt-tailnet-name>:19999` for Netdata. Its Docker and
    explicitly configured systemd collectors show metrics and unit states.
    Compose services are oneshot supervisors: an active unit alone does not
@@ -202,6 +218,15 @@ and required secrets. Home Assistant starts automatically once `br0` exists.
 Serve routes persist in tailscaled state. Removing a port from Nix does not
 remove its old route automatically. Inspect and remove obsolete routes
 explicitly; `tailscale serve reset` deletes all Serve routes on that node.
+The older configuration used ports 81, 5000, 6182, 8096, 9800 and 9901 for
+Serve. Remove those old routes when migrating to the separate listener ports;
+otherwise they can prevent the applications from binding their LAN ports.
+Inspect `tailscale serve status --json` and `sudo ss -lntp` first, and
+remove only old routes that belong to this configuration with
+`tailscale serve --https=<old-port> off`. If listeners remain even though
+the old routes are gone, investigate their owning process. Restarting
+`tailscaled` disconnects Tailscale SSH, so do that only from a local console
+or with another recovery path available.
 
 ## Secrets and staging
 
