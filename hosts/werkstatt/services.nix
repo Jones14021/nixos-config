@@ -4,7 +4,8 @@
 #
 # Application state is placed under /home/jonas/services and must be backed
 # up independently of Nix. Readiness markers deliberately prevent Gitea,
-# Jellyfin, the VM and Compose projects from starting before data is restored.
+# Jellyfin and Compose projects from starting before data is restored. The
+# Home Assistant VM provisions a fresh disk when no existing disk is present.
 # Secrets are provided manually, never as Nix values. See migration/README.md before
 # enabling a restored service, upgrading databases or exposing network ports.
 { lib, pkgs, ... }:

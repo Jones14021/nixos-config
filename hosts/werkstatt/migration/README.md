@@ -153,9 +153,11 @@ The new host mounts the share on demand and preserves that library path.
    root, boot, swap and mounts and adapt the boot loader for the actual
    firmware. The checked-in placeholder cannot boot.
 3. In `hosts/werkstatt/home-assistant.nix`, set `lanInterface` to the wired
-   interface found with `ip -br link`. Adjust `guestCpus`, `guestMemoryMiB` and
-   `guestMac`. The default MAC is a placeholder, not a value discovered from
-   the old VM. The LAN DHCP reservation must match your chosen MAC.
+   interface found with `ip -br link`. Adjust `guestCpus` and `guestMemoryMiB`.
+   Libvirt assigns the guest MAC automatically and the service preserves it
+   across redefinitions. Use the resulting address for any DHCP reservation.
+   If importing the old VM disk, put it in place before enabling the bridge;
+   otherwise the service automatically provisions a fresh Home Assistant OS.
 4. Review the Gitea `ROOT_URL`, `DOMAIN` and SSH settings in `services.nix`,
    and Norish `AUTH_URL` and Firefly `APP_URL` in `containers.nix`. Ensure
    `werkstatt` resolves to the new host and choose a canonical URL for apps
@@ -177,8 +179,9 @@ The new host mounts the share on demand and preserves that library path.
    policies if multiple MAC addresses on one port are restricted. Keep console
    recovery available until the bridge has been tested.
 
-Readiness markers prevent migrated applications from starting with empty
-data. Create each `.ready` only after restoring its data and required secrets.
+Readiness markers prevent migrated services other than Home Assistant from
+starting with empty data. Create each `.ready` only after restoring its data
+and required secrets. Home Assistant starts automatically once `br0` exists.
 
 ## Tailscale and monitoring
 
@@ -432,29 +435,49 @@ of an encrypted backup and rotate the exposed CIFS credential.
 
 ## Home Assistant OS VM
 
-You migrate this VM yourself. Nix manages the VM definition and starts the
-guest, not the Home Assistant OS version. Check and adjust RAM, CPUs, MAC,
-firmware mode, disk bus and any Zigbee/Z-Wave/USB or other passthrough before
-the first boot. The default guest is UEFI, q35, virtio disk and virtio NIC. If
-the original used a different setup, change the definition or use a tested
-backup/restore rather than assuming it will boot. Libvirt metadata is managed
-by the host; disk and UEFI variables are under Jonas's home.
+The VM service automatically downloads the latest stable official Home
+Assistant OS KVM QCOW2 image when its disk is absent, verifies the published
+SHA-256 checksum, and starts it once `br0` is available. The first boot may
+take several minutes; open `http://homeassistant.local:8123` or the guest's LAN
+IP to use the onboarding assistant. No installer ISO is needed. The image is
+downloaded only for initial provisioning; Home Assistant manages its own OS
+updates, independently of Nix rebuilds. Existing disks are never replaced.
+
+Libvirt assigns the MAC automatically; inspect it with
+`sudo virsh -c qemu:///system domiflist home-assistant --inactive` for a DHCP
+reservation. The service preserves the UUID and MAC when redefining the VM.
+Network access and GitHub availability are required for initial provisioning;
+if it fails, inspect `journalctl -u werkstatt-home-assistant -b` and restart
+the service after fixing the problem.
+
+If migrating your old VM rather than starting fresh, you still perform that
+migration yourself. Check RAM, CPUs, firmware mode, disk bus and any
+Zigbee/Z-Wave/USB or other passthrough before the first boot. The default guest
+is non-secure-boot UEFI, q35, virtio disk and virtio NIC. If the original used
+a different setup, change the definition or use a tested backup/restore rather
+than assuming it will boot. Libvirt metadata is managed by the host; disk and
+UEFI variables are under Jonas's home.
 
 1. Shut down the old guest cleanly and back it up, including firmware variables.
    Never attach the same writable disk to two running VMs.
-2. Import or convert a **copy** of the disk to qcow2 at
+2. Before enabling the bridge and starting the VM service, import or convert a
+   **copy** of the disk to qcow2 at
    `/home/jonas/services/home-assistant/home-assistant.qcow2`. For example,
    on the new host, `qemu-img info <source-disk>` followed by
    `qemu-img convert -p -O qcow2 <source-disk> <destination>`; make sure the
    source format and all snapshot/backing files are understood first. Do not
    overwrite the only backup. If carrying forward UEFI variables, confirm they
    are compatible with QEMU/OVMF; VMware firmware state is not generally
-   interchangeable.
+   interchangeable. If a fresh VM was already provisioned, stop the systemd
+   service, shut down the guest with `sudo virsh -c qemu:///system shutdown
+   home-assistant`, and verify it is stopped with `virsh domstate` before
+   moving the fresh disk aside and importing the old copy. Do not overwrite
+   either disk or run a rebuild that restarts the service during the import.
 3. Configure `10.0.2.136` inside Home Assistant OS, or reserve it on your LAN
-   DHCP server for the configured guest MAC. Nix and the bridge do not assign
+   DHCP server for the libvirt-assigned MAC. Nix and the bridge do not assign
    the guest's IP. Use the actual LAN subnet, gateway and DNS; do not create a
    second DHCP server on the LAN. Confirm the old VM is offline.
-4. Verify `br0` and its physical port, create the `.ready` marker, then run
+4. Verify `br0` and its physical port, then run
    `sudo systemctl start werkstatt-home-assistant`. Check
    `sudo virsh -c qemu:///system domstate home-assistant` and use virt-manager
    or the local VNC console to inspect boot. Ensure `10.0.2.136:8123`, local
