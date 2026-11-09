@@ -5,6 +5,7 @@
     ./kde-plasma-6.nix
     ./tailscale.nix
     ./snapmaker-luban.nix
+    ./cura.nix
     ./nethogs-rootless.nix
     ./virtualisation.nix
     ./wireguard.nix
@@ -130,7 +131,6 @@
     # 3rd party
     google-chrome
     snapmaker-luban
-    cura-appimage
     tailscale
     trayscale
     unstablePkgs.mission-center

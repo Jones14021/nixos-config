@@ -15,6 +15,7 @@
     ../modules/home-manager/dolphin-bookmarks.nix
     ../modules/home-manager/vscode.nix
     ../modules/home-manager/opencode.nix
+    ../modules/home-manager/snapmaker.nix
   ];
 
   home.packages = with pkgs; [
