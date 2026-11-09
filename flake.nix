@@ -48,6 +48,13 @@
         config = ./hosts/spectre/configuration.nix;
         home = ./home/jonas.nix;
       }
+      {
+        name = "werkstatt";
+        system = "x86_64-linux";
+        hardwareConfig = ./hosts/werkstatt/hardware-configuration.nix;
+        config = ./hosts/werkstatt/configuration.nix;
+        home = ./home/jonas.nix;
+      }
       # , { name = "otherhost"; ... }
     ];
 
