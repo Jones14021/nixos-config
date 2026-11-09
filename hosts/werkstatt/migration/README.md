@@ -147,11 +147,11 @@ The new host mounts the share on demand and preserves that library path.
    adequate space for `/home/jonas/services`. Set up the usual Jonas account.
    If `/home` is encrypted, arrange for boot-time unlocking; services cannot
    use a home directory only unlocked after desktop login.
-2. Put this repository under `/home/jonas/nixos-config`. Replace
-   `hosts/werkstatt/hardware-configuration.nix` with the generated file from
-   this machine, typically `/etc/nixos/hardware-configuration.nix`. Check
-   root, boot, swap and mounts and adapt the boot loader for the actual
-   firmware. The checked-in placeholder cannot boot.
+2. Put this repository under `/home/jonas/nixos-config`. The generated
+   `hosts/werkstatt/hardware-configuration.nix` describes the current
+   installation. Check that its root, boot and swap UUIDs still match the
+   machine, and regenerate it if the storage layout changes. Confirm the
+   boot loader matches the actual firmware.
 3. In `hosts/werkstatt/home-assistant.nix`, set `lanInterface` to the wired
    interface found with `ip -br link`. Adjust `guestCpus` and `guestMemoryMiB`.
    Libvirt assigns the guest MAC automatically and the service preserves it
