@@ -10,6 +10,12 @@
 # enabling a restored service, upgrading databases or exposing network ports.
 { lib, pkgs, ... }:
 
+let
+  netdataDashboard = pkgs.fetchzip {
+    url = "https://web.archive.org/web/20251210212517if_/https://app.netdata.cloud/agent.tar.gz";
+    hash = "sha256-8ovYkvt324l6f0YT6wTG+Y2u7VaVqotAdssnNTtHIEk=";
+  };
+in
 {
   imports = [ ./containers.nix ./nas.nix ./home-assistant.nix ./tailscale-serve.nix ./migration ];
 
@@ -108,6 +114,7 @@
             - '*.service'
     '';
     config = {
+      directories.web = "${netdataDashboard}/agent";
       global = {
         "cache directory" = "/home/jonas/services/netdata/cache";
         "lib directory" = "/home/jonas/services/netdata/lib";

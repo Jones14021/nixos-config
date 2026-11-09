@@ -97,8 +97,9 @@ Confirm `START SERVICES` when prompted. This checks restored directories,
 secrets and Compose configuration, preserves existing `.ready` markers, and
 starts the selected services without mounting or copying the migration snapshot.
 Jellyfin itself still requires the workouts NAS share to be available. The
-Bitwarden backup stays a manual one-shot. Check service and container health
-afterward; an active Compose unit alone is not a health guarantee.
+Bitwarden backup stays a manual one-shot. The command checks Docker network
+attachments, published ports and native service listeners, but applications
+can still be starting or fail later. Check health and logins afterward.
 
 The NAS username/password entered on the new host are also installed as
 `nas.creds` if that file does not already exist. An existing regular file is
@@ -433,7 +434,9 @@ the native service; never experiment on the only backup.
    requires that mount and will fail to start when it cannot be mounted. Other
    library paths must also exist or be changed in Jellyfin. Hardware
    transcoding and GPU permissions depend on the new hardware and are not
-   assumed here.
+   assumed here. The restore script rewrites the source's legacy
+   `/var/lib/jellyfin/transcodes` path to the home-based Jellyfin cache; custom
+   transcode paths are left unchanged and should be checked separately.
 3. After checking backup and permissions, create
    `/home/jonas/services/jellyfin/.ready` and start `jellyfin.service`. Check
    logs, users, watch history, plugins, media access and actual playback. The

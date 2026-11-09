@@ -22,6 +22,7 @@ import time
 import uuid
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
+from xml.dom import minidom
 
 
 GITEA_LEGACY_SECRET = "!#@FDEWREWR&*("
@@ -88,6 +89,18 @@ START_UNITS = (
     "gitea", "jellyfin", "werkstatt-proxy", "werkstatt-norish",
     "werkstatt-guacamole", "werkstatt-firefly",
 )
+APP_ENDPOINTS = {
+    "werkstatt-proxy-app-1": ("werkstatt-proxy_default", "81/tcp", "81"),
+    "werkstatt-norish-norish-1": (
+        "werkstatt-norish_default", "3000/tcp", "9901",
+    ),
+    "werkstatt-guacamole-guacamole-1": (
+        "werkstatt-guacamole_default", "8080/tcp", "9800",
+    ),
+    "werkstatt-firefly-firefly-1": (
+        "werkstatt-firefly_default", "8080/tcp", "6182",
+    ),
+}
 SERVICE_REQUIRED_DIRS = (
     "gitea/repositories", "gitea/data", "jellyfin/data", "jellyfin/config",
     "proxy/data", "proxy/letsencrypt", "norish/uploads", "norish/postgres",
@@ -575,6 +588,42 @@ def move_directory(source, destination):
     source.rename(destination)
 
 
+def migrate_jellyfin_transcode_path(config_dir):
+    path = Path(config_dir) / "encoding.xml"
+    if path.is_symlink():
+        raise MigrationError(f"Jellyfin configuration is a symlink: {path}")
+    if not path.exists():
+        return False
+    document = minidom.parse(str(path))
+    values = document.getElementsByTagName("TranscodingTempPath")
+    if len(values) != 1:
+        raise MigrationError("Expected exactly one Jellyfin transcoding path")
+    node = values[0]
+    if len(node.childNodes) != 1 or node.firstChild.nodeType != node.TEXT_NODE:
+        return False
+    if node.firstChild.data.strip() != "/var/lib/jellyfin/transcodes":
+        return False
+    node.firstChild.data = str(DESTINATION / "jellyfin/cache/transcodes")
+    original = path.stat()
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            dir=path.parent, prefix=".encoding-migration-", delete=False,
+        ) as output:
+            temporary = Path(output.name)
+            os.fchown(output.fileno(), original.st_uid, original.st_gid)
+            os.fchmod(output.fileno(), original.st_mode & 0o7777)
+            output.write(document.toxml(encoding="utf-8"))
+            output.flush()
+            os.fsync(output.fileno())
+        shutil.copystat(path, temporary, follow_symlinks=False)
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+    return True
+
+
 def create_restore_tree(extracted, metadata, install, credentials, uid, gid, preserve_nas_credentials=False):
     extracted = Path(extracted)
     install = Path(install)
@@ -589,6 +638,7 @@ def create_restore_tree(extracted, metadata, install, credentials, uid, gid, pre
     }
     for source, target in mapping.items():
         move_directory(extracted / source, install / target)
+    migrate_jellyfin_transcode_path(install / "jellyfin/config")
     gitea = extracted / "gitea-source"
     old_config = (gitea / "gitea/conf/app.ini").read_text(encoding="utf-8")
     gitea_environment = container_environment(metadata, "gitea")
@@ -741,6 +791,33 @@ def target_units_inactive():
             raise MigrationError(f"Target readiness marker already exists: {marker}")
 
 
+def verify_service_endpoints():
+    problems = []
+    for name, (network, container_port, host_port) in APP_ENDPOINTS.items():
+        try:
+            container = docker_json("inspect", name)[0]
+            state = container["State"]
+            settings = container["NetworkSettings"]
+            networks = settings.get("Networks") or {}
+            bindings = (settings.get("Ports") or {}).get(container_port) or []
+            if state.get("Status") != "running" or network not in networks:
+                problems.append(f"{name} is not running on {network}")
+            elif not any(binding.get("HostPort") == host_port for binding in bindings):
+                problems.append(f"{name} has not published port {host_port}")
+            elif (state.get("Health") or {}).get("Status") == "unhealthy":
+                problems.append(f"{name} is unhealthy")
+        except (subprocess.CalledProcessError, KeyError, IndexError, ValueError):
+            problems.append(f"could not inspect {name}")
+    for name, port in (("Gitea", 5000), ("Jellyfin", 8096)):
+        try:
+            with socket.create_connection(("127.0.0.1", port), timeout=2):
+                pass
+        except OSError:
+            problems.append(f"{name} is not listening on port {port}")
+    if problems:
+        raise MigrationError("Services are not ready: " + "; ".join(problems))
+
+
 def start_services():
     if not DESTINATION.is_dir() or DESTINATION.is_symlink():
         raise MigrationError("The services directory is missing or is a symlink")
@@ -792,7 +869,8 @@ def start_services():
             f"Some services did not start: {', '.join(failed)}. "
             "Check their journals; NAS backup remains intact"
         )
-    print("Services started. Check container health, logins and data.")
+    verify_service_endpoints()
+    print("Service ports are available. Check application health, logins and data.")
     print("Bitwarden backup remains manual; migrate Home Assistant separately.")
 
 
@@ -877,7 +955,7 @@ def main(argv=None):
     if arguments.snapshot and mode != "restore":
         raise MigrationError("--snapshot is only valid in restore mode")
     if mode == "start":
-        require_commands(("docker-compose", "systemctl"))
+        require_commands(("docker", "docker-compose", "systemctl"))
         with exclusive_lock():
             start_services()
         return

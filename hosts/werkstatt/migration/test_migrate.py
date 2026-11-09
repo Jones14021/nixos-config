@@ -59,6 +59,7 @@ class MigrationTests(unittest.TestCase):
                 return subprocess.CompletedProcess(arguments, 0)
             with mock.patch.object(migrate, "DESTINATION", root), \
                  mock.patch.object(migrate, "command", side_effect=fake_command), \
+                  mock.patch.object(migrate, "verify_service_endpoints"), \
                  mock.patch.object(migrate, "require_confirmation") as confirmation:
                 migrate.start_services()
             self.assertEqual(marker.read_text(), "existing")
@@ -77,6 +78,29 @@ class MigrationTests(unittest.TestCase):
                     migrate.start_services()
             self.assertFalse((root / "gitea/.ready").exists())
             run.assert_not_called()
+
+    def test_endpoint_check_rejects_disconnected_container(self):
+        def fake_inspect(operation, name):
+            network, port, host_port = migrate.APP_ENDPOINTS[name]
+            networks = {} if name == "werkstatt-proxy-app-1" else {network: {}}
+            return [{"State": {"Status": "running"}, "NetworkSettings": {
+                "Networks": networks, "Ports": {port: [{"HostPort": host_port}]},
+            }}]
+        with mock.patch.object(migrate, "docker_json", side_effect=fake_inspect), \
+             mock.patch.object(migrate.socket, "create_connection", return_value=contextlib.nullcontext()):
+            with self.assertRaisesRegex(migrate.MigrationError, "werkstatt-proxy-app-1 is not running on"):
+                migrate.verify_service_endpoints()
+
+    def test_endpoint_check_reports_missing_native_listener(self):
+        def fake_inspect(operation, name):
+            network, port, host_port = migrate.APP_ENDPOINTS[name]
+            return [{"State": {"Status": "running"}, "NetworkSettings": {
+                "Networks": {network: {}}, "Ports": {port: [{"HostPort": host_port}]},
+            }}]
+        with mock.patch.object(migrate, "docker_json", side_effect=fake_inspect), \
+             mock.patch.object(migrate.socket, "create_connection", side_effect=OSError("connection refused")):
+            with self.assertRaisesRegex(migrate.MigrationError, "Gitea is not listening"):
+                migrate.verify_service_endpoints()
 
     def test_start_reports_failures_after_trying_all_services(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -276,6 +300,29 @@ class MigrationTests(unittest.TestCase):
             self.assertEqual((install / "secrets/guacamole.env").read_text(), f"PUID={os.getuid()}\nPGID={os.getgid()}\n")
             self.assertEqual((install / "secrets/nas.creds").stat().st_mode & 0o777, 0o600)
 
+    def test_jellyfin_legacy_transcode_path_is_migrated_atomically(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config = root / "encoding.xml"
+            config.write_text('<?xml version="1.0"?><EncodingOptions><TranscodingTempPath>/var/lib/jellyfin/transcodes</TranscodingTempPath><Other>keep</Other></EncodingOptions>')
+            backup = root / "backup.xml"
+            os.link(config, backup)
+            with mock.patch.object(migrate, "DESTINATION", root / "services"):
+                self.assertTrue(migrate.migrate_jellyfin_transcode_path(root))
+            self.assertIn(str(root / "services/jellyfin/cache/transcodes"), config.read_text())
+            self.assertIn("/var/lib/jellyfin/transcodes", backup.read_text())
+            self.assertIn("<Other>keep</Other>", config.read_text())
+            self.assertFalse(migrate.migrate_jellyfin_transcode_path(root))
+
+    def test_jellyfin_custom_transcode_path_is_preserved(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config = root / "encoding.xml"
+            original = "<EncodingOptions><TranscodingTempPath>/custom/transcodes</TranscodingTempPath></EncodingOptions>"
+            config.write_text(original)
+            self.assertFalse(migrate.migrate_jellyfin_transcode_path(root))
+            self.assertEqual(config.read_text(), original)
+
     def test_token_mismatch_is_rejected(self):
         with self.assertRaises(migrate.MigrationError):
             migrate.selected_environment({}, ("TOKEN",), ("TOKEN",))
@@ -399,6 +446,7 @@ class MigrationTests(unittest.TestCase):
                   mock.patch.object(migrate, "COMPOSE_DIRECTORY", config_dir), \
                  mock.patch.object(migrate, "require_nas_mount"), \
                  mock.patch.object(migrate, "target_units_inactive"), \
+                 mock.patch.object(migrate, "verify_service_endpoints"), \
                  mock.patch.object(migrate, "require_confirmation"), \
                  mock.patch.object(migrate, "command", side_effect=fake_command), \
                  mock.patch.object(migrate.pwd, "getpwnam", return_value=types.SimpleNamespace(pw_uid=os.getuid())), \
