@@ -9,6 +9,7 @@
       commandLineArgs = "--disable-gpu --disable-gpu-sandbox";
     };
     profiles.default.extensions = with unstablePkgs.vscode-extensions; [
+      jnoortheen.nix-ide
       mhutchie.git-graph
       ms-python.python
       ms-python.vscode-pylance
@@ -20,7 +21,9 @@
       ms-python.flake8
       ms-python.mypy-type-checker
       ms-vscode-remote.vscode-remote-extensionpack
+      ms-vscode-remote.remote-containers
       ms-azuretools.vscode-docker
+      ms-azuretools.vscode-containers
       yzhang.markdown-all-in-one
       davidanson.vscode-markdownlint
       mechatroner.rainbow-csv
