@@ -114,6 +114,7 @@
     picocom
     thonny
     nrfconnect
+    saleae-logic-2
 
     # Python
     unstablePkgs.uv
@@ -253,6 +254,7 @@
   services.udev.packages = with pkgs; [
     nrf-udev
     segger-jlink
+    saleae-logic-2
   ];
 
   nixpkgs.config.allowUnfree = true;
