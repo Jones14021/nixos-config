@@ -23,9 +23,10 @@
   https://github.com/Snapmaker/SnapmakerCuraPlugin/issues
 
   The plugin uses UDP broadcast discovery, which does not cross Tailscale.
-  Export "Snapmaker Flavor G-code" and upload it with sm2uploader using the
-  printer's reachable address. Pass -knownhosts a writable path outside the
-  Nix store to persist its token.
+  Export "Snapmaker Flavor G-code" and upload it with sm2uploader's local web
+  interface. The wrapper defaults to printer 10.0.2.190 and the web interface;
+  pass --web-interface=false before a filename to use its command-line mode.
+  The uploader stores printer tokens under XDG_STATE_HOME by default.
 */
 { lib, pkgs, ... }:
 

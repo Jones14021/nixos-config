@@ -2,21 +2,29 @@
   lib,
   buildGoModule,
   fetchFromGitHub,
+  makeWrapper,
 }:
 
 buildGoModule rec {
   pname = "sm2uploader";
-  version = "fork-no-modif-to-gcode-files";
+  version = "0.1.0";
 
   src = fetchFromGitHub {
     owner = "Jones14021";
     repo = "sm2uploader";
-    rev = "67144fee861f2e140dea226941a1f11b9eb0f4ff";
-    hash = "sha256-/yU2NJb8uwUSF9lGtK7bd5z20SWuC1Cv+g7rUq1Nqa0=";
+    rev = "v${version}";
+    hash = "sha256-VotMaDoYmoklgYKnWE3fF7/FZ0Ysm9dsEL1TxxCxOIs=";
   };
 
   # Required since the project uses a go.mod file
   vendorHash = "sha256-hmxcQBdTegeMegQRUuPJU1bX4THhVQjCr4nA74QL4CE=";
+
+  nativeBuildInputs = [ makeWrapper ];
+
+  postFixup = ''
+    wrapProgram "$out/bin/sm2uploader" \
+      --add-flags "--web-interface --host 10.0.2.190"
+  '';
 
   # Replicates the Makefile's build flags
   ldflags = [
