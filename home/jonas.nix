@@ -38,10 +38,12 @@
           ${pkgs.bash}/bin/bash -c '\
           cfg=\"$HOME/.config/snapmaker-luban/Config\"; \
           recovercfg=\"$HOME/.config/snapmaker-luban/snapmaker-recover\"; \
+          fonts=\"$HOME/.config/snapmaker-luban/Fonts\"; \
           find \"$cfg\" -type d -exec chmod u+rwx {} +; \
           find \"$cfg\" -type f -exec chmod u+rw {} +; \
           find \"$recovercfg\" -type d -exec chmod u+rwx {} +; \
           find \"$recovercfg\" -type f -exec chmod u+rw {} +; \
+          if [ -d \"$fonts\" ]; then find \"$fonts\" -type f -exec chmod u+rw {} +; fi; \
           '
           '';
       };
