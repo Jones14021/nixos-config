@@ -53,8 +53,8 @@ let
     { ref = "com.github.tchx84.Flatseal//stable"; }
     { ref = "com.thincast.client//stable"; }
     {
-      appId = "ai.storyteller.solidcraft";
-      bundleUrl = "https://github.com/tangency-labs/solidcraft/releases/download/v0.22.0/solidcraft-0.22.0-linux-x86_64.flatpak";
+      appId = "io.tangencylabs.solidcraft";
+      bundleUrl = "https://github.com/tangency-labs/solidcraft/releases/download/v0.30.1/solidcraft-0.30.1-linux-x86_64.flatpak";
       commands = [ "solidcraft-cli" "solvecraft-cli" "solidcraft" ];
       permissions = [
         "--filesystem=host"
@@ -65,7 +65,6 @@ let
         # OpenCode configuration and authentication state available there.
         "--filesystem=/run/current-system/sw/bin:ro"
         "--filesystem=/nix/store:ro"
-        "--filesystem=~/.config/opencode:ro"
         "--filesystem=~/.local/share/opencode"
         # /app/bin first, or the host's command wrappers shadow the app's own binaries.
         "--env=PATH=/app/bin:/usr/bin:/run/current-system/sw/bin"

@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 
 let
   # The *-cli commands are Flatpak wrappers from modules/flatpak.nix; ports must
@@ -10,6 +10,12 @@ let
   };
 in
 {
+  # Flatpak redirects XDG paths, so expose the host config and credentials to SolidCraft's OpenCode.
+  home.file.".var/app/io.tangencylabs.solidcraft/config/opencode/opencode.json".source =
+    config.xdg.configFile."opencode/opencode.json".source;
+  home.file.".var/app/io.tangencylabs.solidcraft/data/opencode/auth.json".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.local/share/opencode/auth.json";
+
   xdg.configFile."opencode/opencode.json".text = builtins.toJSON {
     "$schema" = "https://opencode.ai/config.json";
     mcp = {
