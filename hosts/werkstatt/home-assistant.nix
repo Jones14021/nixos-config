@@ -1,8 +1,7 @@
 { lib, pkgs, ... }:
 
 let
-  # See configuration.nix for the shared LAN bridge and migration/README.md
-  # for VM provisioning, networking, migration and recovery instructions.
+  # See configuration.nix for the shared LAN bridge.
   # Resources assigned to Home Assistant OS, independent of its own updates.
   guestCpus = 2;
   guestMemoryMiB = 2048;

@@ -14,9 +14,6 @@ ports, non-secret settings and bridge names are intentionally host-specific.
 Docker-published ports can bypass the NixOS firewall. Secrets stay outside the
 Nix store in `/home/jonas/services/secrets/*.env`; Compose's `format: raw`
 prevents interpolation of their contents and requires a recent Compose version.
-See [the migration guide](../migration/README.md) for restoring data, preparing
-secrets, and starting services.
-
 The four long-running units require their `/home/jonas/services/<project>/.ready`
 marker and start and stop the whole project. They are not health checks. The
 Bitwarden backup is manual, requires its own marker and the NAS mount, and uses

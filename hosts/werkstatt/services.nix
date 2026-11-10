@@ -6,8 +6,7 @@
 # up independently of Nix. Readiness markers deliberately prevent Gitea,
 # Jellyfin and Compose projects from starting before data is restored. The
 # Home Assistant VM provisions a fresh disk when no existing disk is present.
-# Secrets are provided manually, never as Nix values. See migration/README.md before
-# enabling a restored service, upgrading databases or exposing network ports.
+# Secrets are provided manually, never as Nix values.
 { lib, pkgs, ... }:
 
 let
@@ -17,7 +16,7 @@ let
   };
 in
 {
-  imports = [ ./containers ./nas.nix ./home-assistant.nix ./tailscale-serve.nix ./migration ];
+  imports = [ ./containers ./nas.nix ./home-assistant.nix ./tailscale-serve.nix ];
 
   # OpenSSH is for the desktop host; Gitea runs its own SSH listener on 2221.
   # Gitea and Jellyfin keep their old LAN ports. Docker's published ports are
