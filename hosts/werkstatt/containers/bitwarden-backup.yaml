@@ -1,0 +1,16 @@
+services:
+  backup:
+    image: rounakdatta/bitwarden-backup@sha256:3bc5253b3396af990318d5603bc45e3b7c40b418410eec4735f1b75a6abb1618
+    labels:
+      host-veth-name.werkstatt-bitwarden-backup_default: veth_bitwarden
+    env_file:
+      - path: /home/jonas/services/secrets/bitwarden-backup.env
+        format: raw
+    volumes:
+      - /home/jonas/services/nas/shared-common/backup_bitwarden:/out
+
+networks:
+  default:
+    driver_opts:
+      # The Compose project name exceeds Linux's 15-byte interface limit.
+      com.docker.network.bridge.name: br-bitwarden

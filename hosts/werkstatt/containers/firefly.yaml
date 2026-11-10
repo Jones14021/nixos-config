@@ -1,0 +1,101 @@
+services:
+  db:
+    image: mariadb@sha256:9da6213d1a5714c4585c9c0003c51510b320d6f60e53d78701fe1e194126249f
+    restart: unless-stopped
+    labels:
+      host-veth-name.werkstatt-firefly_default: veth_firefly_db
+    env_file:
+      - path: /home/jonas/services/secrets/firefly-db.env
+        format: raw
+    environment:
+      TZ: Europe/Bucharest
+      MYSQL_DATABASE: firefly
+      MYSQL_USER: fireflyuser
+    networks:
+      default:
+        aliases:
+          - firefly-db
+    volumes:
+      - /home/jonas/services/firefly/mysql:/var/lib/mysql
+
+  redis:
+    image: redis@sha256:a7cee7c8178ff9b5297cb109e6240f5072cdaaafd775ce6b586c3c704b06458e
+    restart: unless-stopped
+    labels:
+      host-veth-name.werkstatt-firefly_default: veth_firefly_rd
+    networks:
+      default:
+        aliases:
+          - firefly-redis
+    volumes:
+      - /home/jonas/services/firefly/redis:/data
+
+  firefly:
+    image: fireflyiii/core@sha256:4d71e7207ac46661bed6fcd13e824c739dfdb331a5d58dc7e048fc60c5382da7
+    restart: unless-stopped
+    labels:
+      host-veth-name.werkstatt-firefly_default: veth_firefly
+    ports:
+      - "6182:8080"
+    env_file:
+      - path: /home/jonas/services/secrets/firefly.env
+        format: raw
+    # These settings override the env file; APP_URL is the canonical address.
+    environment:
+      APP_ENV: production
+      APP_URL: http://werkstatt:6182
+      APP_DEBUG: "false"
+      TZ: Europe/Berlin
+      DEFAULT_LANGUAGE: en_US
+      DEFAULT_LOCALE: equal
+      DB_CONNECTION: mysql
+      DB_HOST: firefly-db
+      DB_PORT: "3306"
+      DB_DATABASE: firefly
+      DB_USERNAME: fireflyuser
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      REDIS_SCHEME: tcp
+      REDIS_HOST: firefly-redis
+      REDIS_PORT: "6379"
+      REDIS_DB: "0"
+      REDIS_CACHE_DB: "1"
+      LOG_CHANNEL: stack
+      APP_LOG_LEVEL: notice
+      AUDIT_LOG_LEVEL: info
+      DKR_CHECK_SQLITE: "false"
+      DKR_RUN_MIGRATION: "true"
+      DKR_RUN_UPGRADE: "true"
+      DKR_RUN_VERIFY: "true"
+      DKR_RUN_REPORT: "true"
+      DKR_RUN_PASSPORT_INSTALL: "true"
+      MAIL_MAILER: smtp
+      MAIL_HOST: smtp.gmail.com
+      MAIL_PORT: "465"
+      MAIL_FROM: jonashoermann12@gmail.com
+      MAIL_ENCRYPTION: SSL
+    volumes:
+      - /home/jonas/services/firefly/upload:/var/www/html/storage/upload
+    depends_on:
+      - db
+      - redis
+
+  cron:
+    image: alpine@sha256:51b67269f354137895d43f3b3d810bfacd3945438e94dc5ac55fdac340352f48
+    restart: unless-stopped
+    labels:
+      host-veth-name.werkstatt-firefly_default: veth_firefly_cr
+    env_file:
+      - path: /home/jonas/services/secrets/firefly-cron.env
+        format: raw
+    environment:
+      TZ: Europe/Berlin
+    depends_on:
+      - firefly
+    # $$ defers expansion to the container; its crontab will contain the token.
+    command: ["sh", "-c", 'echo "0 3 * * * wget -qO- http://firefly:8080/api/v1/cron/$$STATIC_CRON_TOKEN" | crontab - && crond -f -L /dev/stdout']
+
+networks:
+  default:
+    driver_opts:
+      com.docker.network.bridge.name: br-firefly

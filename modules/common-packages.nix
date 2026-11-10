@@ -148,6 +148,7 @@
     simple-scan
     planify
     freerdp
+    virt-manager
     baobab # Gnome disk usage viewer
     turnon # WoL utility
     gnome-logs

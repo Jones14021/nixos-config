@@ -22,20 +22,19 @@ in {
       Type = "oneshot";
       Environment = "PATH=${pkgs.lib.makeBinPath [ pkgs.networkmanager ]}";
 
-      # First delete any existing connection named OTH (ignore failure),
-      # then create it, then configure the VPN parameters.
+      # Create the connection if missing, then update its VPN parameters.
       ExecStart = "${pkgs.writeShellScript "setup-oth-vpn-script" ''
-        NMCLI=\"${pkgs.networkmanager}/bin/nmcli\"
+        NMCLI="${nmcli}"
 
         # Check if the connection exists (sends output to null)
-        if ! $NMCLI con show \"OTH\" >/dev/null 2>&1; then
+        if ! "$NMCLI" con show "OTH" >/dev/null 2>&1; then
           # If it doesn't exist, create it
-          $NMCLI con add type vpn vpn-type org.freedesktop.NetworkManager.fortisslvpn con-name \"OTH\"
+          "$NMCLI" con add type vpn vpn-type org.freedesktop.NetworkManager.fortisslvpn con-name "OTH"
         fi
 
         # Always update the configuration in case gateway, cert, or user changes.
         # This will NOT overwrite an existing stored password (vpn.secrets).
-        $NMCLI con mod \"OTH\" vpn.data \"gateway=${gateway},otp-flags=0,password-flags=1,realm=vpn-default,trusted-cert=${trustedCert},user=${user}\"
+        "$NMCLI" con mod "OTH" vpn.data "gateway=${gateway},otp-flags=0,password-flags=1,realm=vpn-default,trusted-cert=${trustedCert},user=${user}"
       ''}";
 
       # NOTE:
