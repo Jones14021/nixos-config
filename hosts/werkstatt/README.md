@@ -35,6 +35,3 @@ bridge link
 
 Docker's bridges are separate private networks, unlike the LAN bridge. See
 [the Compose README](containers/README.md) for their names and veth labels.
-The OTH share is an on-demand network mount and may need the OTH VPN; Mission
-Center's disk collector can trigger it even when nobody opens the folder.
-The VPN connection is configured by Home Manager but must be started manually.
