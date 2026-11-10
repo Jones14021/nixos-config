@@ -1,6 +1,6 @@
 services:
   norish:
-    image: norishapp/norish@sha256:f96ba007c7bdd7b6640f34c2ffbe63a647a2f9e2a291afdf666f895e7f6f168b
+    image: norishapp/norish:v0.26.1-beta
     restart: unless-stopped
     labels:
       host-veth-name.werkstatt-norish_default: veth_norish
@@ -20,7 +20,7 @@ services:
 
   # PostgreSQL 17 matches the restored data. depends_on does not check health.
   db:
-    image: postgres@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    image: postgres:17
     restart: unless-stopped
     labels:
       host-veth-name.werkstatt-norish_default: veth_norish_db
@@ -33,7 +33,7 @@ services:
       - /home/jonas/services/norish/postgres:/var/lib/postgresql/data
 
   redis:
-    image: redis@sha256:8a1efc5f479551822b47424ccae982026b633f28818eab0387348120a61e10e2
+    image: redis:8.10
     restart: unless-stopped
     labels:
       host-veth-name.werkstatt-norish_default: veth_norish_rds
@@ -42,7 +42,7 @@ services:
 
   # The app and Obscura must receive the same CDP token.
   obscura:
-    image: norishapp/obscura@sha256:d3b30af8d88a73685422d9c29a7689c0952966e8d6e87eb00edcf6c2c85defe6
+    image: norishapp/obscura:0.2.5-norish.1
     restart: unless-stopped
     labels:
       host-veth-name.werkstatt-norish_default: veth_norish_obs

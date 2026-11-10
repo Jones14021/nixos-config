@@ -8,9 +8,8 @@ The fixed project names `werkstatt-<file-name>` preserve Docker network and
 container names. When using another Compose manager, use the same project name
 and host paths; otherwise the network-specific veth labels will not match.
 
-Images are pinned to the inspected migration digests for a predictable initial
-restore, not automatic updates. Review upgrades and backups explicitly. Paths,
-ports, non-secret settings and bridge names are intentionally host-specific.
+Images generally use version tags. Review upgrades and backups
+explicitly. Paths, ports, non-secret settings and bridge names are intentionally host-specific.
 Docker-published ports can bypass the NixOS firewall. Secrets stay outside the
 Nix store in `/home/jonas/services/secrets/*.env`; Compose's `format: raw`
 prevents interpolation of their contents and requires a recent Compose version.

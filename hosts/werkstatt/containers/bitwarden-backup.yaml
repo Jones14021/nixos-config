@@ -1,5 +1,7 @@
 services:
   backup:
+    # keep a clearly defined image version to avoid unexpected updates
+    # and by that security is not compromised by unexpected image updates
     image: rounakdatta/bitwarden-backup@sha256:3bc5253b3396af990318d5603bc45e3b7c40b418410eec4735f1b75a6abb1618
     labels:
       host-veth-name.werkstatt-bitwarden-backup_default: veth_bitwarden

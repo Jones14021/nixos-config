@@ -1,6 +1,6 @@
 services:
   db:
-    image: mariadb@sha256:9da6213d1a5714c4585c9c0003c51510b320d6f60e53d78701fe1e194126249f
+    image: mariadb:11.2
     restart: unless-stopped
     labels:
       host-veth-name.werkstatt-firefly_default: veth_firefly_db
@@ -19,7 +19,7 @@ services:
       - /home/jonas/services/firefly/mysql:/var/lib/mysql
 
   redis:
-    image: redis@sha256:a7cee7c8178ff9b5297cb109e6240f5072cdaaafd775ce6b586c3c704b06458e
+    image: redis:7.2
     restart: unless-stopped
     labels:
       host-veth-name.werkstatt-firefly_default: veth_firefly_rd
@@ -31,7 +31,7 @@ services:
       - /home/jonas/services/firefly/redis:/data
 
   firefly:
-    image: fireflyiii/core@sha256:4d71e7207ac46661bed6fcd13e824c739dfdb331a5d58dc7e048fc60c5382da7
+    image: fireflyiii/core:version-6.7.9
     restart: unless-stopped
     labels:
       host-veth-name.werkstatt-firefly_default: veth_firefly
@@ -81,7 +81,7 @@ services:
       - redis
 
   cron:
-    image: alpine@sha256:51b67269f354137895d43f3b3d810bfacd3945438e94dc5ac55fdac340352f48
+    image: alpine:3.23
     restart: unless-stopped
     labels:
       host-veth-name.werkstatt-firefly_default: veth_firefly_cr
