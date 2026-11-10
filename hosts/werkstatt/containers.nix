@@ -168,7 +168,11 @@ let
   };
   # JSON is a supported Compose format. Its absolute bind mounts ensure paths
   # do not accidentally resolve relative to the generated Nix store file.
-  compose = name: services: pkgs.writeText "werkstatt-${name}-compose.json" (builtins.toJSON { inherit services; });
+  compose = name: services: pkgs.writeText "werkstatt-${name}-compose.json" (builtins.toJSON {
+    inherit services;
+    networks.default.driver_opts."com.docker.network.bridge.name" =
+      if name == "bitwarden-backup" then "br-bitwarden" else "br-${name}";
+  });
   # Use a distinct Compose project name per stack to isolate networks. The
   # marker must be created only after data and env files are restored. A
   # oneshot unit staying active does not track the health of its containers.

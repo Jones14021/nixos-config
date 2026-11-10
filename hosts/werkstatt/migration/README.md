@@ -367,6 +367,42 @@ the corresponding Compose project but leaves bind-mounted data intact.
 Images are pinned to source digests for the initial restore; check image
 availability and plan security upgrades once migration is complete.
 
+The Compose networks use host bridge names `br-proxy`, `br-norish`,
+`br-guacamole`, `br-firefly` and `br-bitwarden`. Existing networks must be
+recreated to acquire these names. When a NixOS rebuild changes an active
+project's unit, systemd restarts it: Compose stops the project and removes its
+network, then creates the network with the new bridge name on start. This
+interrupts the project; an unchanged rebuild does not necessarily restart it.
+Check the results after deploying:
+
+```sh
+ip -br link show type bridge
+docker network inspect werkstatt-proxy_default --format '{{index .Options "com.docker.network.bridge.name"}}'
+```
+
+Repeat the inspect command for the other project network names. If a bridge
+has not been recreated, during a maintenance window stop and start its project
+individually. For all four long-running projects:
+
+```sh
+for project in proxy norish guacamole firefly; do
+   sudo systemctl stop "werkstatt-$project" || break
+   if sudo docker network inspect "werkstatt-${project}_default" >/dev/null 2>&1; then
+      echo "Network still exists; inspect attached containers before continuing: $project"
+      break
+   fi
+   sudo systemctl start "werkstatt-$project" || break
+done
+```
+
+Stopping a project interrupts its services; bind-mounted data is retained.
+Check `docker network inspect` and project logs afterward. Docker may assign
+different container IPs after recreation, so check proxy upstreams that use
+fixed IP addresses. The Bitwarden network is created when its one-shot job
+next runs; if an older network exists, inspect its attachments and remove it
+before running the job. Also note that deploying the Home Assistant bridge
+configuration can interrupt host networking and start the Home Assistant VM.
+
 For the proxy, inspect every restored route, hostname, certificate and
 upstream. The old disabled ownCloud route references an unselected service.
 Old upstream IPs or Docker network names may refer to Ubuntu and need changing.
