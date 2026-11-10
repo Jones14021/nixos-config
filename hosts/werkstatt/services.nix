@@ -140,6 +140,7 @@ in
   systemd.services.docker.unitConfig.RequiresMountsFor = [ "/home/jonas/services/docker" ];
   # Libvirt manages the independently updated Home Assistant OS guest.
   virtualisation.libvirtd.enable = true;
+  programs.virt-manager.enable = true;
 
   # Secret files are supplied manually and never embedded in the Nix store.
   # Other application directories are created as part of the migration.
