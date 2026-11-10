@@ -15,4 +15,4 @@ echo "wiping old nixos generations..."
 sudo nix-env --delete-generations +3 --profile /nix/var/nix/profiles/system
 
 # Rebuild KService/KSycoca cache fully
-kbuildsycoca6 --noincremental
+XDG_MENU_PREFIX=plasma- kbuildsycoca6 --noincremental
