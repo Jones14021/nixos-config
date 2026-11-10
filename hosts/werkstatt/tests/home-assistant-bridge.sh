@@ -15,8 +15,13 @@ case "${0##*/}" in
       '--wait 60 connection up id werkstatt-bridge')
         [[ ! -e "$test_state/activation-fails" ]] || exit 1
         ;;
+      '--wait 60 device reapply br0')
+        echo reapplied >> "$test_state/reapplications"
+        [[ ! -e "$test_state/reapply-fails" ]] || exit 1
+        [[ -e "$test_state/no-address" ]] || touch "$test_state/static-address"
+        ;;
       '-g IP4.ADDRESS device show br0')
-        [[ -e "$test_state/no-address" ]] || echo '10.0.1.78/16'
+        if [[ -e "$test_state/static-address" ]]; then echo '10.0.2.135/16'; elif [[ ! -e "$test_state/no-address" ]]; then echo '10.0.1.78/16'; fi
         ;;
       *) echo "Unexpected nmcli command: $*" >&2; exit 1 ;;
     esac
@@ -41,8 +46,10 @@ script=$(cd "$root" && nix eval --raw .#nixosConfigurations.werkstatt.config.sys
 
 bash -e -c "$script"
 [[ $(wc -l < "$test_state/activations") == 1 ]]
+[[ $(wc -l < "$test_state/reapplications") == 1 ]]
 bash -e -c "$script"
 [[ $(wc -l < "$test_state/activations") == 1 ]]
+[[ $(wc -l < "$test_state/reapplications") == 1 ]]
 
 rm "$test_state/connected"
 touch "$test_state/activation-fails"
@@ -51,6 +58,10 @@ rm "$test_state/activation-fails"
 touch "$test_state/port-fails"
 if bash -e -c "$script"; then echo 'Missing bridge port was accepted' >&2; exit 1; fi
 rm "$test_state/port-fails"
+rm "$test_state/static-address"
+touch "$test_state/reapply-fails"
+if bash -e -c "$script"; then echo 'Reapply failure was accepted' >&2; exit 1; fi
+rm "$test_state/reapply-fails"
 touch "$test_state/connected" "$test_state/no-address"
 if bash -e -c "$script"; then echo 'Missing IPv4 address was accepted' >&2; exit 1; fi
 

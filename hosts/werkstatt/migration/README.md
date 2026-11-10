@@ -167,8 +167,9 @@ The new host mounts the share on demand and preserves that library path.
    installation. Check that its root, boot and swap UUIDs still match the
    machine, and regenerate it if the storage layout changes. Confirm the
    boot loader matches the actual firmware.
-3. In `hosts/werkstatt/home-assistant.nix`, verify `lanInterface` matches the
-   wired interface found with `ip -br link`. Adjust `guestCpus` and `guestMemoryMiB`.
+3. In `hosts/werkstatt/configuration.nix`, verify `lanInterface` matches the
+   wired interface found with `ip -br link` and the static host IP is unused.
+   In `hosts/werkstatt/home-assistant.nix`, adjust `guestCpus` and `guestMemoryMiB`.
    Libvirt assigns the guest MAC automatically and the service preserves it
    across redefinitions. Use the resulting address for any DHCP reservation.
    If importing the old VM disk, put it in place before enabling the bridge;
