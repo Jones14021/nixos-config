@@ -6,7 +6,7 @@ let
   #    `ip -br link`. Wi-Fi client interfaces generally cannot be bridged.
   # 2. Rebuild: NetworkManager creates br0 and attaches the wired interface.
   #    The host receives its LAN address on br0. Check `ip address show br0`
-  #    and `bridge link`; an existing competing connection may need disabling.
+  #    and `bridge link` after activation.
   # 3. If no disk exists, the VM service downloads and verifies the latest
   #    stable Home Assistant OS KVM image and boots its setup assistant.
   #    To migrate an existing VM instead, place its disk at the path below
@@ -18,7 +18,7 @@ let
   #    See migration/README.md for migration and recovery instructions.
 
   # Wired interface to attach to br0. Set this before enabling the VM.
-  lanInterface = null;
+  lanInterface = "enp1s0";
   # Resources assigned to Home Assistant OS, independent of its own updates.
   guestCpus = 2;
   guestMemoryMiB = 2048;
@@ -74,7 +74,7 @@ in
     werkstatt-bridge = {
       connection = { id = "werkstatt-bridge"; type = "bridge"; interface-name = "br0"; autoconnect = true; autoconnect-ports = 1; };
       bridge.stp = false;
-      ipv4.method = "auto";
+      ipv4 = { method = "auto"; may-fail = false; };
       ipv6.method = "auto";
     };
     werkstatt-bridge-port = {
@@ -83,12 +83,34 @@ in
     };
   };
 
+  systemd.services.werkstatt-lan-bridge = lib.mkIf (lanInterface != null) {
+    description = "Activate the Werkstatt LAN bridge";
+    requires = [ "NetworkManager.service" "NetworkManager-ensure-profiles.service" ];
+    after = [ "NetworkManager.service" "NetworkManager-ensure-profiles.service" ];
+    before = [ "werkstatt-home-assistant.service" ];
+    wantedBy = [ "multi-user.target" ];
+    path = [ pkgs.networkmanager pkgs.coreutils ];
+    serviceConfig = { Type = "oneshot"; RemainAfterExit = true; TimeoutStartSec = 150; };
+    script = ''
+      if [[ "$(nmcli -g GENERAL.CONNECTION device show ${lib.escapeShellArg lanInterface})" != "werkstatt-bridge-port" ]] ||
+         [[ "$(readlink -f /sys/class/net/${lanInterface}/master)" != "/sys/devices/virtual/net/br0" ]]; then
+        nmcli --wait 60 connection up id werkstatt-bridge-port ifname ${lib.escapeShellArg lanInterface}
+      fi
+      if [[ -z "$(nmcli -g IP4.ADDRESS device show br0)" ]]; then
+        nmcli --wait 60 connection up id werkstatt-bridge
+      fi
+      [[ "$(nmcli -g GENERAL.CONNECTION device show ${lib.escapeShellArg lanInterface})" == "werkstatt-bridge-port" ]]
+      [[ "$(readlink -f /sys/class/net/${lanInterface}/master)" == "/sys/devices/virtual/net/br0" ]]
+      [[ -n "$(nmcli -g IP4.ADDRESS device show br0)" ]]
+    '';
+  };
+
   # Provision only when the disk does not exist, then define and start the VM.
   # A configured bridge is required; libvirt manages the guest after startup.
   systemd.services.werkstatt-home-assistant = {
     description = "Define and start the Home Assistant OS virtual machine";
-    after = [ "libvirtd.service" "NetworkManager-ensure-profiles.service" "network-online.target" ];
-    requires = [ "libvirtd.service" ];
+    after = [ "libvirtd.service" "werkstatt-lan-bridge.service" "network-online.target" ];
+    requires = [ "libvirtd.service" ] ++ lib.optional (lanInterface != null) "werkstatt-lan-bridge.service";
     wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
     unitConfig.ConditionPathExists = "/sys/class/net/br0";

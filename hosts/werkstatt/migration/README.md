@@ -167,8 +167,8 @@ The new host mounts the share on demand and preserves that library path.
    installation. Check that its root, boot and swap UUIDs still match the
    machine, and regenerate it if the storage layout changes. Confirm the
    boot loader matches the actual firmware.
-3. In `hosts/werkstatt/home-assistant.nix`, set `lanInterface` to the wired
-   interface found with `ip -br link`. Adjust `guestCpus` and `guestMemoryMiB`.
+3. In `hosts/werkstatt/home-assistant.nix`, verify `lanInterface` matches the
+   wired interface found with `ip -br link`. Adjust `guestCpus` and `guestMemoryMiB`.
    Libvirt assigns the guest MAC automatically and the service preserves it
    across redefinitions. Use the resulting address for any DHCP reservation.
    If importing the old VM disk, put it in place before enabling the bridge;
@@ -188,11 +188,12 @@ The new host mounts the share on demand and preserves that library path.
 
    This stages files but does not commit them. Set a password and configure
    SSH keys for Jonas. Reboot and confirm Plasma, storage and networking.
-6. Check `ip address show br0` and `bridge link`. The bridge should have the
-   host's LAN address and the wired interface should be attached. A competing
-   NetworkManager connection may need its autoconnect disabled. Check switch
-   policies if multiple MAC addresses on one port are restricted. Keep console
-   recovery available until the bridge has been tested.
+6. Check `ip address show br0` and `bridge link`. The bridge activation service
+   switches the wired interface from its old connection to the bridge and
+   checks that the bridge has an IPv4 address before allowing Home Assistant
+   to start. Inspect `journalctl -u werkstatt-lan-bridge -b` if it fails.
+   Check switch policies if multiple MAC addresses on one port are restricted.
+   Keep console recovery available until the bridge has been tested.
 
 Readiness markers prevent migrated services other than Home Assistant from
 starting with empty data. Create each `.ready` only after restoring its data
