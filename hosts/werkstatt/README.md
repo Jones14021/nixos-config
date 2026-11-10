@@ -35,3 +35,35 @@ bridge link
 
 Docker's bridges are separate private networks, unlike the LAN bridge. See
 [the Compose README](containers/README.md) for their names and veth labels.
+
+## Home Assistant access
+
+On the LAN, open `http://homeassistant.local:8123` or the guest's IP address on
+port 8123. On 10 November 2026 the VM reported `10.0.1.80`, so the direct URL
+was `http://10.0.1.80:8123`. DHCP can change this address; it is not the
+Werkstatt host's address. Home Assistant may redirect the browser to port 80.
+For a fresh installation, choose the backup restore option on the onboarding
+screen if restoring an existing Home Assistant backup.
+
+On Werkstatt, check the guest's status and LAN address with:
+
+```sh
+virsh -c qemu:///system domstate home-assistant
+virsh -c qemu:///system domiflist home-assistant
+virsh -c qemu:///system domifaddr home-assistant --source agent
+```
+
+Use the IPv4 address for the interface whose MAC matches `domiflist`, not the
+guest's internal Docker or `hassio` addresses. The address command requires the
+guest agent; if it is unavailable, look up the VM's MAC in the router's DHCP
+client list. The Home Assistant web interface can take several minutes to start.
+
+For the VM's graphical console, run this from a desktop session on Werkstatt:
+
+```sh
+nix shell nixpkgs#virt-manager -c virt-manager --connect qemu:///system --show-domain-console home-assistant
+```
+
+The VNC console listens only on Werkstatt's loopback interface, not the LAN.
+To configure a static guest address, use Home Assistant's network settings;
+alternatively reserve the guest MAC on the router.
