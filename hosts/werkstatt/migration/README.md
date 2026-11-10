@@ -174,7 +174,7 @@ The new host mounts the share on demand and preserves that library path.
    If importing the old VM disk, put it in place before enabling the bridge;
    otherwise the service automatically provisions a fresh Home Assistant OS.
 4. Review the Gitea `ROOT_URL`, `DOMAIN` and SSH settings in `services.nix`,
-   and Norish `AUTH_URL` and Firefly `APP_URL` in `containers.nix`. Ensure
+   and Norish `AUTH_URL` and Firefly `APP_URL` in the Compose files. Ensure
    `werkstatt` resolves to the new host and choose a canonical URL for apps
    that depend on redirects; several different origins may not all work.
 5. Git-backed flakes omit untracked files. Review and add the host files and
@@ -356,8 +356,8 @@ individually. For example, Norish:
 sudo touch /home/jonas/services/norish/.ready
 sudo systemctl start werkstatt-norish
 sudo systemctl status werkstatt-norish
-sudo docker compose -p werkstatt-norish -f /etc/werkstatt/compose/norish.json ps
-sudo docker compose -p werkstatt-norish -f /etc/werkstatt/compose/norish.json logs --tail=100
+sudo docker compose -p werkstatt-norish -f /etc/werkstatt/compose/norish.yaml ps
+sudo docker compose -p werkstatt-norish -f /etc/werkstatt/compose/norish.yaml logs --tail=100
 ```
 
 Repeat with `proxy`, `guacamole` and `firefly`, creating the matching marker

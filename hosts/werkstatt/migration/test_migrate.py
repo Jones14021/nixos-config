@@ -169,6 +169,33 @@ class MigrationTests(unittest.TestCase):
                     rendered = json.loads(output)["services"]["test"]["environment"]["TOKEN"]
                     self.assertEqual(rendered.replace("$$", "$"), value)
 
+    def test_validate_staged_compose_with_real_yaml(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            secrets = root / "install/secrets"
+            secrets.mkdir(parents=True)
+            for name in ("norish", "norish-db", "norish-obscura", "guacamole", "firefly", "firefly-db", "firefly-cron", "bitwarden-backup"):
+                (secrets / f"{name}.env").write_text("TOKEN=example\n")
+            work = root / "validation"
+            migrate.validate_staged_compose(root / "install", work, Path(__file__).parent.parent / "containers")
+            config = json.loads((work / "firefly.json").read_text())
+            self.assertEqual(config["services"]["cron"]["env_file"][0]["path"], str(secrets / "firefly-cron.env"))
+            self.assertIn("$$STATIC_CRON_TOKEN", config["services"]["cron"]["command"][2])
+            rendered = subprocess.check_output([
+                "docker-compose", "-p", "werkstatt-firefly", "-f", str(work / "firefly.json"),
+                "config", "--no-env-resolution", "--format", "json",
+            ], text=True)
+            self.assertIn("$STATIC_CRON_TOKEN", json.loads(rendered)["services"]["cron"]["command"][2])
+
+    def test_validate_staged_compose_rejects_unexpected_env_file(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "proxy.yaml").write_text(json.dumps({
+                "services": {"app": {"image": "example", "env_file": [{"path": "/tmp/unexpected.env", "format": "raw"}]}}
+            }))
+            with self.assertRaisesRegex(migrate.MigrationError, "Unexpected Compose env-file"):
+                migrate.validate_staged_compose(root / "install", root / "validation", root)
+
     def test_empty_gitea_key_uses_original_fallback(self):
         config = "[security]\nSECRET_KEY=\nINTERNAL_TOKEN=one\n[oauth2]\nJWT_SECRET=two\n[server]\nLFS_JWT_SECRET=three\n"
         self.assertEqual(migrate.parse_gitea_config(config)["secret_key"], migrate.GITEA_LEGACY_SECRET)
@@ -436,7 +463,7 @@ class MigrationTests(unittest.TestCase):
                 service = {"image": "example"}
                 if name in env_names:
                     service["env_file"] = [{"path": str(destination / "secrets" / env_names[name]), "format": "raw"}]
-                (config_dir / f"{name}.json").write_text(json.dumps({"services": {name: service}}))
+                (config_dir / f"{name}.yaml").write_text(json.dumps({"services": {name: service}}))
             original_validation = migrate.validate_staged_compose
             def fake_command(*arguments, **kwargs):
                 if arguments[0] in {"docker-compose", "tar"}:

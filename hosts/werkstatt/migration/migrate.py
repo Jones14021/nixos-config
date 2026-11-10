@@ -766,7 +766,11 @@ def copy_verified(source, destination, expected):
 def validate_staged_compose(install, work, config_dir=Path("/etc/werkstatt/compose")):
     work.mkdir(mode=0o700)
     for name in ("proxy", "norish", "guacamole", "firefly", "bitwarden-backup"):
-        config = json.loads((config_dir / f"{name}.json").read_text(encoding="utf-8"))
+        result = command(
+            "docker-compose", "-p", f"werkstatt-{name}", "-f", str(config_dir / f"{name}.yaml"),
+            "config", "--no-env-resolution", "--no-interpolate", "--format", "json", capture=True,
+        )
+        config = json.loads(result.stdout)
         for service in config["services"].values():
             for entry in service.get("env_file", []):
                 path = Path(entry["path"])
@@ -845,7 +849,7 @@ def start_services():
     for name in ("proxy", "norish", "guacamole", "firefly", "bitwarden-backup"):
         command(
             "docker-compose", "-p", f"werkstatt-{name}", "-f",
-            str(COMPOSE_DIRECTORY / f"{name}.json"), "config", "--quiet",
+            str(COMPOSE_DIRECTORY / f"{name}.yaml"), "config", "--quiet",
         )
     require_confirmation(
         "Enable and start Gitea, Jellyfin, proxy, Norish, Guacamole and "

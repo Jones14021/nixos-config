@@ -1,0 +1,19 @@
+services:
+  app:
+    # Pin the inspected image until the restored service is ready for upgrades.
+    image: jc21/nginx-proxy-manager@sha256:081c4c544ad5da81022b3b030c2ba50175923bc87a534bce8b52f870e695e9f1
+    restart: unless-stopped
+    labels:
+      host-veth-name.werkstatt-proxy_default: veth_proxy
+    ports:
+      - "80:80"
+      - "81:81"
+      - "443:443"
+    volumes:
+      - /home/jonas/services/proxy/data:/data
+      - /home/jonas/services/proxy/letsencrypt:/etc/letsencrypt
+
+networks:
+  default:
+    driver_opts:
+      com.docker.network.bridge.name: br-proxy

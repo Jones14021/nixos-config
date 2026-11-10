@@ -17,11 +17,11 @@ let
   };
 in
 {
-  imports = [ ./containers.nix ./nas.nix ./home-assistant.nix ./tailscale-serve.nix ./migration ];
+  imports = [ ./containers ./nas.nix ./home-assistant.nix ./tailscale-serve.nix ./migration ];
 
   # OpenSSH is for the desktop host; Gitea runs its own SSH listener on 2221.
   # Gitea and Jellyfin keep their old LAN ports. Docker's published ports are
-  # separate and may bypass these firewall rules; see containers.nix.
+  # separate and may bypass these firewall rules; see containers/README.md.
   services.openssh.enable = true;
   networking.firewall.allowedTCPPorts = [ 2221 5000 8096 ];
 
@@ -128,7 +128,7 @@ in
   systemd.services.netdata.unitConfig.RequiresMountsFor = [ "/home/jonas/services/netdata" ];
 
   # Docker's configured data root stays under home. Application data uses
-  # explicit bind mounts in containers.nix rather than named volumes. Runtime
+  # explicit bind mounts in the Compose files rather than named volumes. Runtime
   # and libvirt system metadata can still be stored in standard system paths.
   virtualisation.docker = {
     enable = true;

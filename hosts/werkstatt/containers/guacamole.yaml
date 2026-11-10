@@ -1,0 +1,21 @@
+services:
+  guacamole:
+    image: jwetzell/guacamole@sha256:6128500fa30f0c3cc3c9079bc977b7e2d2159d58d0fa16f084cb1d115ea6ce49
+    restart: unless-stopped
+    labels:
+      host-veth-name.werkstatt-guacamole_default: veth_guacamole
+    ports:
+      - "9800:8080"
+    env_file:
+      - path: /home/jonas/services/secrets/guacamole.env
+        format: raw
+    environment:
+      TZ: Europe/Bucharest
+    volumes:
+      # The all-in-one image keeps PostgreSQL data in this directory too.
+      - /home/jonas/services/guacamole/config:/config
+
+networks:
+  default:
+    driver_opts:
+      com.docker.network.bridge.name: br-guacamole
