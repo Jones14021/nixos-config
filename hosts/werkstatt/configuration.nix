@@ -23,7 +23,14 @@ in
     werkstatt-bridge = {
       connection = { id = "werkstatt-bridge"; type = "bridge"; interface-name = "br0"; autoconnect = true; autoconnect-ports = 1; };
       bridge.stp = false;
-      ipv4 = { method = "manual"; address1 = "${hostIPv4},10.0.1.1"; dns = "10.0.1.1;"; may-fail = false; };
+      ipv4 = {
+        method = "manual";
+        address1 = "${hostIPv4},10.0.1.1";
+        dns = "10.0.1.1;";
+        may-fail = false;
+        # Prefer the directly connected LAN over the identical Tailscale subnet route.
+        routing-rule1 = "priority 5000 to 10.0.0.0/16 table 254";
+      };
       ipv6.method = "auto";
     };
     werkstatt-bridge-port = {
@@ -38,7 +45,7 @@ in
     after = [ "NetworkManager.service" "NetworkManager-ensure-profiles.service" ];
     before = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" "network-online.target" ];
-    path = [ pkgs.networkmanager pkgs.coreutils ];
+    path = [ pkgs.networkmanager pkgs.coreutils pkgs.iproute2 ];
     serviceConfig = { Type = "oneshot"; RemainAfterExit = true; TimeoutStartSec = 150; };
     script = ''
       if [[ "$(nmcli -g GENERAL.CONNECTION device show br0 2>/dev/null)" != "werkstatt-bridge" ]]; then
@@ -57,12 +64,14 @@ in
         sleep 1
       done
       [[ "$(nmcli -g GENERAL.STATE device show br0)" == 100* ]]
-      if ! nmcli -g IP4.ADDRESS device show br0 | grep -Fxq ${lib.escapeShellArg hostIPv4}; then
+      if ! nmcli -g IP4.ADDRESS device show br0 | grep -Fxq ${lib.escapeShellArg hostIPv4} ||
+         ! ip -4 rule show | grep -Eq '^5000:[[:space:]]+from all to 10[.]0[.]0[.]0/16 lookup (main|254)([[:space:]]|$)'; then
         nmcli --wait 60 device reapply br0
       fi
       [[ "$(nmcli -g GENERAL.CONNECTION device show ${lib.escapeShellArg lanInterface})" == "werkstatt-bridge-port" ]]
       [[ "$(readlink -f /sys/class/net/${lanInterface}/master)" == "/sys/devices/virtual/net/br0" ]]
       nmcli -g IP4.ADDRESS device show br0 | grep -Fxq ${lib.escapeShellArg hostIPv4}
+      ip -4 rule show | grep -Eq '^5000:[[:space:]]+from all to 10[.]0[.]0[.]0/16 lookup (main|254)([[:space:]]|$)'
     '';
   };
 

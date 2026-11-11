@@ -21,8 +21,8 @@ is inactive because `enp1s0` is used by the bridge.
 
 The host bridge profile is declared in `configuration.nix`; GUI changes to it
 are not persistent across profile regeneration. The bridge service reapplies the
-profile when the expected host IPv4 address is missing, which changes the host
-address and can interrupt existing connections. Check that `10.0.2.135` is
+profile when the expected host IPv4 address or LAN policy rule is missing, which
+can interrupt existing connections. Check that `10.0.2.135` is
 reserved and unused before deployment,
 and have physical console access available. Verify afterwards:
 
@@ -31,7 +31,15 @@ ip -br address show br0
 ip -4 route
 nmcli -g IP4.ADDRESS,IP4.GATEWAY,IP4.DNS device show br0
 bridge link
+ip -4 rule show
+ip -4 route get 10.0.2.136
 ```
+
+The bridge profile also installs a priority 5000 rule that looks up `10.0.0.0/16`
+in the main routing table before Tailscale's subnet routes. Without it, an
+advertised route for the same LAN can divert host traffic and cause the host
+firewall's reverse-path filter to drop IPv4 traffic bridged to Home Assistant.
+Other accepted Tailscale subnet routes remain available.
 
 Docker's bridges are separate private networks, unlike the LAN bridge. See
 [the Compose README](containers/README.md) for their names and veth labels.
