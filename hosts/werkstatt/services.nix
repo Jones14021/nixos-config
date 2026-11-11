@@ -93,10 +93,8 @@ in
   };
   # Start only after the old configuration and data have been restored.
   systemd.services.jellyfin.unitConfig.ConditionPathExists = "/home/jonas/services/jellyfin/.ready";
-  # The legacy library path /mnt/nas is a bind mount of the Synology workouts
-  # share. Require it before startup so an offline NAS cannot look like an
-  # empty local media library.
-  systemd.services.jellyfin.unitConfig.RequiresMountsFor = [ "/home/jonas/services/jellyfin" "/mnt/nas" ];
+  # The legacy library path /mnt/nas is mounted on access when the NAS is online.
+  systemd.services.jellyfin.unitConfig.RequiresMountsFor = [ "/home/jonas/services/jellyfin" ];
 
   # Netdata replaces Portainer as the monitoring dashboard. Container metrics
   # come from Docker/cgroups; systemd unit collection needs an explicit job.

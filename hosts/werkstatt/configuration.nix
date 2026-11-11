@@ -36,17 +36,27 @@ in
     description = "Activate the Werkstatt LAN bridge";
     requires = [ "NetworkManager.service" "NetworkManager-ensure-profiles.service" ];
     after = [ "NetworkManager.service" "NetworkManager-ensure-profiles.service" ];
-    wantedBy = [ "multi-user.target" ];
+    before = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" "network-online.target" ];
     path = [ pkgs.networkmanager pkgs.coreutils ];
     serviceConfig = { Type = "oneshot"; RemainAfterExit = true; TimeoutStartSec = 150; };
     script = ''
+      if [[ "$(nmcli -g GENERAL.CONNECTION device show br0 2>/dev/null)" != "werkstatt-bridge" ]]; then
+        nmcli --wait 60 connection up id werkstatt-bridge
+      fi
       if [[ "$(nmcli -g GENERAL.CONNECTION device show ${lib.escapeShellArg lanInterface})" != "werkstatt-bridge-port" ]] ||
          [[ "$(readlink -f /sys/class/net/${lanInterface}/master)" != "/sys/devices/virtual/net/br0" ]]; then
         nmcli --wait 60 connection up id werkstatt-bridge-port ifname ${lib.escapeShellArg lanInterface}
       fi
-      if [[ -z "$(nmcli -g IP4.ADDRESS device show br0)" ]]; then
-        nmcli --wait 60 connection up id werkstatt-bridge
-      fi
+      for attempt in {1..60}; do
+        if [[ "$(nmcli -g GENERAL.STATE device show br0)" == 100* ]] &&
+           [[ "$(nmcli -g GENERAL.CONNECTION device show ${lib.escapeShellArg lanInterface})" == "werkstatt-bridge-port" ]] &&
+           [[ "$(readlink -f /sys/class/net/${lanInterface}/master)" == "/sys/devices/virtual/net/br0" ]]; then
+          break
+        fi
+        sleep 1
+      done
+      [[ "$(nmcli -g GENERAL.STATE device show br0)" == 100* ]]
       if ! nmcli -g IP4.ADDRESS device show br0 | grep -Fxq ${lib.escapeShellArg hostIPv4}; then
         nmcli --wait 60 device reapply br0
       fi

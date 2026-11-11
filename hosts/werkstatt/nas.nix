@@ -1,13 +1,12 @@
-# Shared Synology NAS access for werkstatt services. The NAS is assumed to be
-# online when a consumer starts; if it is unavailable, the dependent service
-# fails instead of silently using an empty local directory.
+# Shared Synology NAS access for werkstatt services. The NAS is mounted on
+# access and may be offline when no service needs it.
 #
 # Before use, create /home/jonas/services/secrets/nas.creds as root, mode 0600:
 #   username=<Synology account>
 #   password=<password>
 #   domain=<optional domain>
 # Grant that account access to both shares. Never add the credentials to Git.
-# Mounts are started on demand by systemd dependencies, not at every boot.
+# Mounts are started on demand by systemd automounts, not at every boot.
 { pkgs, ... }:
 
 let
@@ -19,6 +18,8 @@ let
     options = [
       "noauto"
       "_netdev"
+      "x-systemd.automount"
+      "x-systemd.idle-timeout=60s"
       "x-systemd.mount-timeout=30s"
       "credentials=${credentials}"
       "uid=jonas"
@@ -45,6 +46,6 @@ in
   fileSystems."/mnt/nas" = {
     device = "${base}/workouts";
     fsType = "none";
-    options = [ "bind" "noauto" "x-systemd.requires-mounts-for=${base}/workouts" ];
+    options = [ "bind" "noauto" "_netdev" "x-systemd.automount" "x-systemd.idle-timeout=60s" "x-systemd.requires-mounts-for=${base}/workouts" ];
   };
 }

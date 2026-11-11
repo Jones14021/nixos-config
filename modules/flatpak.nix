@@ -299,7 +299,9 @@ in
   system.activationScripts.triggerFlatpakBootstrap.text = ''
     # NixOS activation uses a minimal PATH without systemctl. It also runs
     # before switch-to-configuration reloads systemd.
-    if ! ${systemctl} daemon-reload; then
+    if [ "''${IN_NIXOS_SYSTEMD_STAGE1:-}" = true ] || [ ! -e /run/booted-system ]; then
+      :
+    elif ! ${systemctl} daemon-reload; then
       echo "flatpak-bootstrap: failed to reload systemd" >&2
     else
       echo "flatpak-bootstrap: monitoring service..."
