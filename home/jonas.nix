@@ -12,6 +12,7 @@
     ../modules/home-manager/forticlient-oth.nix
     ../modules/home-manager/plasma-manager/shortcuts.nix
     ../modules/home-manager/plasma-manager/widgets.nix
+    ../modules/home-manager/plasma-manager/launchers.nix
     ../modules/home-manager/dolphin-bookmarks.nix
     ../modules/home-manager/vscode.nix
     ../modules/home-manager/opencode.nix
