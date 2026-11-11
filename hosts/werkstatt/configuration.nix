@@ -14,6 +14,8 @@ in
     ./services.nix
   ];
 
+  home-manager.users.jonas.imports = [ ../../modules/home-manager/plasma-manager/werkstatt-power.nix ];
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 

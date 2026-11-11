@@ -75,3 +75,24 @@ nix shell nixpkgs#virt-manager -c virt-manager --connect qemu:///system --show-d
 The VNC console listens only on Werkstatt's loopback interface, not the LAN.
 To configure a static guest address, use Home Assistant's network settings;
 alternatively reserve the guest MAC on the router.
+
+Werkstatt does not automatically suspend while idle on AC power; screen locking
+and manual suspend are unchanged. The Home Assistant recovery timer retries a
+failed bridge or VM startup every minute after its first check two minutes after
+boot. It also restarts a stopped VM, including one stopped manually; stop the
+recovery timer first for maintenance. Libvirt restarts the guest after a crash.
+Paused guests are left alone because they may have encountered a storage error.
+The timer checks VM state, not the health of Home Assistant or its integrations.
+
+```sh
+systemctl status werkstatt-home-assistant.service werkstatt-home-assistant-recovery.timer
+journalctl -u werkstatt-home-assistant-recovery.service
+```
+
+For maintenance, stop the timer before shutting down the VM, then start it again
+afterward. The stop lasts until the timer is started again or the host reboots.
+
+```sh
+sudo systemctl stop werkstatt-home-assistant-recovery.timer
+sudo systemctl start werkstatt-home-assistant-recovery.timer
+```

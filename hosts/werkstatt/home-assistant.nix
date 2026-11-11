@@ -25,6 +25,7 @@ let
       </os>
       <features><acpi/><apic/></features>
       <cpu mode='host-passthrough'/>
+      <on_crash>restart</on_crash>
       <devices>
         <disk type='file' device='disk'>
           <driver name='qemu' type='qcow2'/>
@@ -60,7 +61,6 @@ in
     requires = [ "libvirtd.service" "werkstatt-lan-bridge.service" ];
     wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
-    unitConfig.ConditionPathExists = "/sys/class/net/br0";
     unitConfig.RequiresMountsFor = [ base ];
     path = [ pkgs.libvirt pkgs.curl pkgs.jq pkgs.xz pkgs.qemu_kvm pkgs.xmlstarlet ];
     serviceConfig = { Type = "oneshot"; RemainAfterExit = true; };
@@ -90,6 +90,35 @@ in
         virsh -c qemu:///system start home-assistant
       fi
     '';
+  };
+
+  # A dependency failure prevents systemd from starting the oneshot at all, so
+  # retry it independently and also recover a guest that later stops.
+  systemd.services.werkstatt-home-assistant-recovery = {
+    description = "Recover the Home Assistant VM when it is stopped";
+    path = [ pkgs.libvirt pkgs.systemd ];
+    serviceConfig.Type = "oneshot";
+    script = ''
+      systemctl start werkstatt-lan-bridge.service
+      systemctl start werkstatt-home-assistant.service
+
+      state="$(virsh -c qemu:///system domstate home-assistant)"
+      case "$state" in
+        "shut off"|crashed)
+          virsh -c qemu:///system start home-assistant
+          ;;
+      esac
+    '';
+  };
+
+  systemd.timers.werkstatt-home-assistant-recovery = {
+    description = "Periodically retry Home Assistant VM startup";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnBootSec = "2min";
+      OnUnitInactiveSec = "1min";
+      AccuracySec = "5s";
+    };
   };
 
 }
