@@ -1,0 +1,38 @@
+services:
+  neugier:
+    image: ghcr.io/jones14021/neugier:latest
+    restart: unless-stopped
+    labels:
+      host-veth-name.werkstatt-neugier_default: veth_neugier
+    env_file:
+      - path: /home/jonas/services/neugier/neugier.env
+    environment:
+      TS_AUTHKEY: ""
+      TS_EXTRA_ARGS: ""
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - /home/jonas/services/neugier/data:/data
+
+  tailscale:
+    image: tailscale/tailscale:stable
+    restart: unless-stopped
+    network_mode: service:neugier
+    depends_on:
+      neugier:
+        condition: service_started
+        restart: true
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:-}
+      TS_AUTH_ONCE: "true"
+      TS_HOSTNAME: neugier
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "true"
+      TS_EXTRA_ARGS: ${TS_EXTRA_ARGS:-}
+    volumes:
+      - /home/jonas/services/neugier/tailscale-state:/var/lib/tailscale
+
+networks:
+  default:
+    driver_opts:
+      com.docker.network.bridge.name: br-neugier

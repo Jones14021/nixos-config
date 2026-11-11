@@ -52,4 +52,22 @@ in
       "${pkgs.tailscale}/bin/tailscale serve --bg --yes --https=${toString route.serve} http://127.0.0.1:${toString route.backend}"
     ) routes);
   };
+
+  systemd.services.werkstatt-neugier-tailscale-serve = {
+    description = "Publish NEUGIER on its existing Tailscale identity";
+    after = [ "werkstatt-neugier.service" ];
+    requires = [ "werkstatt-neugier.service" ];
+    partOf = [ "werkstatt-neugier.service" ];
+    wantedBy = [ "multi-user.target" ];
+    unitConfig.ConditionPathExists = "/home/jonas/services/neugier/.ready";
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      Restart = "on-failure";
+      RestartSec = "30s";
+    };
+    script = ''
+      ${pkgs.docker-compose}/bin/docker-compose -p werkstatt-neugier --env-file /home/jonas/services/neugier/neugier.env -f ${./containers/neugier.yaml} exec -T tailscale tailscale serve --bg --yes --https=443 http://127.0.0.1:8080
+    '';
+  };
 }

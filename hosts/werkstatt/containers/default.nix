@@ -5,6 +5,7 @@ let
   projects = {
     proxy = ./proxy.yaml;
     norish = ./norish.yaml;
+    neugier = ./neugier.yaml;
     guacamole = ./guacamole.yaml;
     firefly = ./firefly.yaml;
     bitwarden-backup = ./bitwarden-backup.yaml;
@@ -29,8 +30,8 @@ let
       ExecStart = if name == "bitwarden-backup" then
         "${pkgs.docker-compose}/bin/docker-compose -p werkstatt-${name} -f ${compose} run --rm backup"
       else
-        "${pkgs.docker-compose}/bin/docker-compose -p werkstatt-${name} -f ${compose} up -d --remove-orphans";
-      ExecStop = lib.optionalString (name != "bitwarden-backup") "${pkgs.docker-compose}/bin/docker-compose -p werkstatt-${name} -f ${compose} down";
+        "${pkgs.docker-compose}/bin/docker-compose -p werkstatt-${name} ${lib.optionalString (name == "neugier") "--env-file ${base}/neugier/neugier.env"} -f ${compose} up -d --remove-orphans";
+      ExecStop = lib.optionalString (name != "bitwarden-backup") "${pkgs.docker-compose}/bin/docker-compose -p werkstatt-${name} ${lib.optionalString (name == "neugier") "--env-file ${base}/neugier/neugier.env"} -f ${compose} down";
     };
   };
 in

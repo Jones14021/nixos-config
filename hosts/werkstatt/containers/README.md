@@ -13,7 +13,11 @@ explicitly. Paths, ports, non-secret settings and bridge names are intentionally
 Docker-published ports can bypass the NixOS firewall. Secrets stay outside the
 Nix store in `/home/jonas/services/secrets/*.env`; Compose's `format: raw`
 prevents interpolation of their contents and requires a recent Compose version.
-The four long-running units require their `/home/jonas/services/<project>/.ready`
+NEUGIER uses its original Compose environment format in the protected
+`/home/jonas/services/neugier/neugier.env` file instead. Its Tailscale state is
+stored alongside its data and retains its separate identity. Stop the original
+NEUGIER node before starting it on Werkstatt.
+The long-running units require their `/home/jonas/services/<project>/.ready`
 marker and start and stop the whole project. They are not health checks. The
 Bitwarden backup is manual, requires its own marker and the NAS mount, and uses
 `compose run --rm`; it does not start on boot. A changed unit can restart during
