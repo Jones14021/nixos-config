@@ -64,7 +64,7 @@
     # KIO network-mount optimizations, e.g. MIME type from file extension instead of reading content
     network_mounts.General = {
       EnableOptimizations = true;
-      SmbPaths = "${config.home.homeDirectory}/OneDrive/";
+      SmbPaths = "${config.home.homeDirectory}/OneDrive/,${config.home.homeDirectory}/shares/";
     };
 
     # no previews/thumbnails for remote locations
