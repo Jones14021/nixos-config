@@ -61,6 +61,11 @@ let
     cp -R ${snapmakerPluginSource} "$out"
     chmod -R u+w "$out"
 
+    # Cura 5.11+ passes mime_type when saving, but the plugin's writer does not accept it.
+    substituteInPlace "$out/gcode_writer/SnapmakerGCodeWriter.py" \
+      --replace-fail 'def write(self, stream, node, mode=FileWriter.OutputMode.BinaryMode) -> None:' \
+        'def write(self, stream, node, mode=FileWriter.OutputMode.BinaryMode, mime_type=None, **kwargs) -> bool:'
+
     substituteInPlace "$out/settings_plugin/SnapmakerSettingsPlugin.py" \
       --replace-fail 'if filename.endswith(".def.json"):' \
         'if filename.endswith(".def.json") and filename != "snapmaker_2_a350_dual_extruder.def.json":' \
