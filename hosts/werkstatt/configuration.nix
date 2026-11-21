@@ -19,6 +19,11 @@ in
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # Rotate the upside-down eGalax touchscreen's input coordinates by 180 degrees.
+  services.udev.extraRules = ''
+    ACTION!="remove", KERNEL=="event[0-9]*", ENV{ID_VENDOR_ID}=="0eef", ENV{ID_MODEL_ID}=="0001", ENV{ID_INPUT_TOUCHSCREEN}=="1", ENV{LIBINPUT_CALIBRATION_MATRIX}="-1 0 1 0 -1 1"
+  '';
+
   networking.hostName = "werkstatt";
   networking.networkmanager.enable = true;
   networking.networkmanager.ensureProfiles.profiles = {
