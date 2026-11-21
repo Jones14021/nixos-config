@@ -54,7 +54,7 @@ let
     { ref = "com.thincast.client//stable"; }
     {
       appId = "io.tangencylabs.solidcraft";
-      bundleUrl = "https://github.com/tangency-labs/solidcraft/releases/download/v0.30.1/solidcraft-0.30.1-linux-x86_64.flatpak";
+      bundleUrl = "https://github.com/tangency-labs/solidcraft/releases/download/v0.46.0/solidcraft-0.46.0-linux-x86_64.flatpak";
       commands = [ "solidcraft-cli" "solvecraft-cli" "solidcraft" ];
       permissions = [
         "--filesystem=host"
